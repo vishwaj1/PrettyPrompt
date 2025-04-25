@@ -100,7 +100,7 @@ export default function PromptlyPage() {
   /* ---------- UI ---------- */
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <h1 className="text-3xl font-bold mb-4">PrettyPromptr</h1>
+      <h1 className="text-3xl font-bold mb-4">PrettyPrompt</h1>
 
       <textarea
         className="w-full h-40 p-3 border rounded-lg resize-none focus:outline-none focus:ring"
@@ -148,7 +148,7 @@ export default function PromptlyPage() {
 
             <div className="relative">
               <textarea
-                className="w-full h-48 p-3 pr-14 border rounded-lg bg-gray-50 resize-none"
+                className="w-full h-48 p-3 pr-14 border rounded-lg bg-black-50 resize-none"
                 readOnly
                 value={rewrite}
               />
