@@ -24,6 +24,8 @@ export default function PromptlyPage() {
   const [tips, setTips] = useState<string[] | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [rewrite, setRewrite] = useState<string | null>(null);
+
 
   /* ----- network helpers ----- */
   const apiBase = 'http://127.0.0.1:8000';
@@ -55,6 +57,21 @@ export default function PromptlyPage() {
     return data.items;
   };
 
+
+  const fetchRewrite = async (): Promise<string> => {
+    const res = await fetch(`${apiBase}/rewrite-prompt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    });
+    if (!res.ok) {
+      const detail = (await res.json()).detail as string | undefined;
+      throw new Error(detail ?? res.statusText);
+    }
+    const data = (await res.json()) as { prompt: string };
+    return data.prompt;
+  };
+
   /* ----- click handler ----- */
   const handleAnalyze = async () => {
     if (!prompt.trim()) return;
@@ -68,8 +85,11 @@ export default function PromptlyPage() {
       const result = await analyzePrompt();
       setAnalysis(result);
 
-      const suggestions = await fetchImprovements();
+      const suggestions = await fetchImprovements();//Summarize prompt
       setTips(suggestions);
+
+      const improved = await fetchRewrite();   // Rewrite prompt
+  setRewrite(improved);
     } catch (err) {
       setError((err as Error).message ?? 'Unknown error');
     } finally {
@@ -120,6 +140,28 @@ export default function PromptlyPage() {
           </ul>
         </div>
       )}
+
+      {/* Rewrite prompt */}
+      {rewrite && (
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-2">Rewritten prompt</h2>
+
+            <div className="relative">
+              <textarea
+                className="w-full h-48 p-3 pr-14 border rounded-lg bg-gray-50 resize-none"
+                readOnly
+                value={rewrite}
+              />
+              <button
+                className="absolute top-2 right-2 px-3 py-1 text-sm bg-blue-600 text-white rounded-lg"
+                onClick={() => navigator.clipboard.writeText(rewrite)}
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+        )}
+      
     </div>
   );
 }
