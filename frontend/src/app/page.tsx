@@ -80,7 +80,7 @@ export default function PromptlyPage() {
   /* ---------- UI ---------- */
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <h1 className="text-3xl font-bold mb-4">Promptly — Prompt Analyzer</h1>
+      <h1 className="text-3xl font-bold mb-4">PrettyPromptr</h1>
 
       <textarea
         className="w-full h-40 p-3 border rounded-lg resize-none focus:outline-none focus:ring"
