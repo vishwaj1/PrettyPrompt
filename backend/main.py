@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from groq import Groq
 from dotenv import load_dotenv
 from fastapi.middleware.cors  import CORSMiddleware
+from typing import Optional
 
 import os
 import re,json
@@ -18,6 +19,23 @@ app.add_middleware(
     allow_methods=["*"],      # <-- include OPTIONS automatically
     allow_headers=["*"],      # allow Content-Type, Authorization, etc.
 )
+
+# ---------- Helper that grabs JSON ----------
+def grab_json(obj_str: str) -> str:
+    """
+    Return the first {...} block found in ``obj_str``.
+    Raises ValueError if no JSON object is detected.
+    """
+    # ① remove ``` fences if they exist
+    if obj_str.lstrip().startswith("```"):
+        obj_str = re.sub(r"^```(\w+)?\s*|```$", "", obj_str.strip(),
+                         flags=re.DOTALL).strip()
+
+    # ② pull the first {...} object (lazy so it stops at the matching })
+    match = re.search(r"\{[\s\S]*?\}", obj_str)
+    if not match:
+        raise ValueError("No JSON object detected in LLM response")
+    return match.group(0)
 
 # ---------- Pydantic Schemas ----------
 
@@ -61,14 +79,11 @@ def analyze_prompt(raw_prompt: str) -> PromptAnalysis:
             {"role": "user",   "content": raw_prompt}
         ]
     )
-    payload = completion.choices[0].message.content
-
-    # NEW — strip ``` fences if they exist
-    if payload.lstrip().startswith("```"):
-        payload = re.sub(r"^```(\w+)?\s*|```$", "", payload.strip(), flags=re.DOTALL).strip()
 
     try:
-        return PromptAnalysis.model_validate_json(payload)
+        payload = completion.choices[0].message.content
+        clean_json = grab_json(payload)
+        return PromptAnalysis.model_validate_json(clean_json)
     except Exception as e:
         raise ValueError(f"LLM returned invalid JSON: {e}\nRaw:\n{payload}")
 # ---------- API Route ----------
@@ -97,12 +112,17 @@ SUGGESTION_SYSTEM = """\
     • Edge-case coverage
     Return ONLY a JSON array of strings.  Do NOT wrap it in back-ticks.
     """
-def suggest_improvements(raw_prompt: str) -> ImprovementSuggestions:
+def suggest_improvements(raw_prompt: str, tone: Optional[str] = None) -> ImprovementSuggestions:
+    lead = f"The author’s tone is **{tone}**.\n" if tone else ""
     response = client.chat.completions.create(
         model=MODEL,
         temperature=0.3,
         messages=[
-            {"role": "system", "content": SUGGESTION_SYSTEM},
+            {
+                "role": "system",
+                "content": SUGGESTION_SYSTEM + "\n\n" + lead +
+                           "Tailor advice so the rewritten prompt preserves this tone."
+            },
             {"role": "user", "content": raw_prompt},
         ],
     )
@@ -112,11 +132,14 @@ def suggest_improvements(raw_prompt: str) -> ImprovementSuggestions:
         payload = re.sub(r"^```(\w+)?\s*|```$", "", payload.strip(), flags=re.DOTALL).strip()
     return ImprovementSuggestions(items=json.loads(payload))
 
+class SuggestRequest(BaseModel):
+    prompt: str
+    tone: Optional[str] = None   # formal, casual, etc.
 
 @app.post("/suggest-improvements", response_model=ImprovementSuggestions)
-def suggest_endpoint(body: PromptRequest):
+def suggest_endpoint(body: SuggestRequest):
     try:
-        return suggest_improvements(body.prompt)
+        return suggest_improvements(body.prompt, body.tone)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

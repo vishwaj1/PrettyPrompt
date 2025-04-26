@@ -43,11 +43,11 @@ export default function PromptlyPage() {
     return (await res.json()) as Analysis;
   };
 
-  const fetchImprovements = async (): Promise<string[]> => {
+  const fetchImprovements = async (currentTone: string | null): Promise<string[]> => {
     const res = await fetch(`${apiBase}/suggest-improvements`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, tone: currentTone }),
     });
     if (!res.ok) {
       const detail = (await res.json()).detail as string | undefined;
@@ -85,7 +85,7 @@ export default function PromptlyPage() {
       const result = await analyzePrompt();
       setAnalysis(result);
 
-      const suggestions = await fetchImprovements();//Summarize prompt
+      const suggestions = await fetchImprovements(result.tone);//Summarize prompt
       setTips(suggestions);
 
       const improved = await fetchRewrite();   // Rewrite prompt
@@ -124,11 +124,19 @@ export default function PromptlyPage() {
 
       {/* Analysis JSON */}
       {analysis && (
+        <>
         <pre className="mt-6 bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
-{JSON.stringify(analysis, null, 2)}
+    {JSON.stringify(analysis, null, 2)}
         </pre>
-      )}
-
+    
+        {/* Tone badge */}
+        {analysis.tone && (
+          <span className="inline-block mt-2 rounded-full bg-purple-600/10 px-3 py-1 text-sm font-medium text-purple-700">
+            Tone: {analysis.tone}
+          </span>
+        )}
+      </>
+    )}
       {/* Improvement tips */}
       {tips && (
         <div className="mt-6">
