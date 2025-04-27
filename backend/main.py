@@ -175,7 +175,12 @@ def rewrite_prompt(raw_prompt: str) -> RewrittenPrompt:
     return RewrittenPrompt(prompt=rewritten)
 
 
-
+@app.post("/rewrite-prompt", response_model=RewrittenPrompt)
+def rewrite_endpoint(body: PromptRequest):
+    try:
+        return rewrite_prompt(body.prompt)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 
