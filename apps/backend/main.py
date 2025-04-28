@@ -1,3 +1,9 @@
+import os
+
+# ─── Remove any proxy env vars so Groq() won’t inherit them ───
+for v in ("HTTP_PROXY","HTTPS_PROXY","http_proxy","https_proxy"):
+    os.environ.pop(v, None)
+
 from fastapi import FastAPI, HTTPException, APIRouter
 from pydantic import BaseModel
 from groq import Groq
@@ -5,12 +11,6 @@ from dotenv import load_dotenv
 from fastapi.middleware.cors  import CORSMiddleware
 from typing import Optional, Literal, List
 from models import CompareRequest, CompareResponse, Criterion
-
-import os
-
-# ─── Remove any proxy env vars so Groq() won’t inherit them ───
-for v in ("HTTP_PROXY","HTTPS_PROXY","http_proxy","https_proxy"):
-    os.environ.pop(v, None)
 
 import re,json
 load_dotenv()
