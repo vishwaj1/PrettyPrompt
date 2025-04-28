@@ -1,0 +1,11 @@
+{
+  "name": "pretty-prompt",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev:web": "npm --workspace apps/web run dev",
+    "dev:backend": "npm --workspace apps/backend start",
+    "dev:ext": "npm --workspace apps/extension run dev",
+    "build": "npm run build --workspaces"
+  }
+}
