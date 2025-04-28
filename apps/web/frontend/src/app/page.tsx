@@ -6,8 +6,7 @@ export function Page() {
 }
 
 import { useState } from 'react';
-import { SessionProvider } from 'next-auth/react';
-import { useSession, signIn, signOut } from 'next-auth/react'; 
+import { useSession, signOut } from 'next-auth/react'; 
 
 type Mode   = 'rewrite' | 'shorten' | 'lengthen' | 'casual' | 'formal';
 type Target = 'gpt4o' | 'claude' | 'gemini' | 'mistral' | 'llama3';          // same three models

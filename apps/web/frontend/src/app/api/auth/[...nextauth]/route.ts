@@ -20,7 +20,7 @@ export const authOptions = {
       name: "Credentials",
       credentials: { email:{}, password:{} },
       async authorize(creds) {
-        const { email, password } = creds as any;
+        const { email, password } = creds as { email: string; password: string };
         const user = await prisma.user.findUnique({ where:{ email } });
         if (!user?.passwordHash) throw new Error("No user");
         const ok = await bcrypt.compare(password, user.passwordHash!);

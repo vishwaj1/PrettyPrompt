@@ -42,6 +42,7 @@ export default function RegisterPage() {
         window.location.href = '/login';
       }, 1000);
     } catch (err) {
+      console.error(err);
       setError('Registration failed. Please try again.');
       setBusy(false);
     }
