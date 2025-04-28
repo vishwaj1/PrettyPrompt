@@ -1,9 +1,5 @@
 'use client';
-import HomePage from './homepage';
 
-export function Page() {
-  return <HomePage />;
-}
 
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react'; 
