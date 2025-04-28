@@ -64,7 +64,7 @@ export default function PrettyPromptPage() {
     setBusy(true);
     try {
       const pairs = await Promise.all(active.map(async id => {
-        const res = await fetch('http://localhost:8000/prompt-assist', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/prompt-assist`, {
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ prompt:draft, mode, target_model:id,synth_examples:fewShot })
@@ -86,7 +86,7 @@ export default function PrettyPromptPage() {
     const firstOut = Object.values(results)[0];
     if (!draft.trim() || !firstOut) return;
     setBusy(true);
-    const res = await fetch('http://localhost:8000/compare', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/compare`, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ original_prompt:draft, rewritten_prompt:firstOut })
     });
