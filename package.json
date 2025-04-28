@@ -1,11 +1,20 @@
 {
   "name": "pretty-prompt",
   "private": true,
-  "workspaces": ["apps/*"],
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
     "dev:web": "npm --workspace apps/web run dev",
     "dev:backend": "npm --workspace apps/backend start",
     "dev:ext": "npm --workspace apps/extension run dev",
     "build": "npm run build --workspaces"
+  },
+  "dependencies": {
+    "@next-auth/prisma-adapter": "^1.0.7",
+    "@prisma/client": "^6.6.0",
+    "bcryptjs": "^3.0.2",
+    "next-auth": "^4.24.11",
+    "prisma": "^6.6.0"
   }
 }

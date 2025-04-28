@@ -1,9 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
 from pydantic import BaseModel
 from groq import Groq
 from dotenv import load_dotenv
 from fastapi.middleware.cors  import CORSMiddleware
-from typing import Optional
+from typing import Optional, Literal, List
+from models import CompareRequest, CompareResponse, Criterion
 
 import os
 import re,json
@@ -39,149 +40,164 @@ def grab_json(obj_str: str) -> str:
 
 # ---------- Pydantic Schemas ----------
 
-class PromptRequest(BaseModel):
+class AssistRequest(BaseModel):
     prompt: str
+    mode: Literal["rewrite", "shorten", "lengthen", "casual", "formal"] = "rewrite"
+    target_model: Literal["gpt4o", "claude", "gemini", "mistral", "llama3"] = "gpt4o"   # ← NEW
+    context: Optional[List[str]] = None
+    synth_examples: bool = False          # ← NEW toggle from the UI
 
-class PromptAnalysis(BaseModel):
-    intent: str
-    constraints: list[str] | None
-    desired_format: str | None
-    tone: str | None
-    gaps: list[str] | None
+PROMPT_ASSIST = """\
+You are PrettyPrompt, an expert prompt improver.
 
-# ---------- Helper that calls OpenAI ----------
-
-SYSTEM_MESSAGE = """\
-You are PrettyPrompt, an expert prompt-analysis agent.
-For any prompt you receive, identify:
-1. The main *intent* (short sentence).
-2. Any *explicit constraints* (bullet phrases).
-3. The *desired output format* if mentioned (e.g. “JSON”, “list”, “essay”, or “unspecified”).
-4. The author’s *tone/style* (one word: “formal”, “casual”, “technical”, etc., or “unspecified”).
-5. Up to 3 major *gaps* or ambiguities that might trip up an LLM (empty list if none).
-
-Return ONLY valid JSON exactly in this schema:
-{
-  "intent": "...",
-  "constraints": ["...", ...] | [],
-  "desired_format": "...",
-  "tone": "...",
-  "gaps": ["...", ...] | []
-}
-"""
-
-def analyze_prompt(raw_prompt: str) -> PromptAnalysis:
-    completion = client.chat.completions.create(
-        model=MODEL,
-        temperature=0.2,
-        messages=[
-            {"role": "system", "content": SYSTEM_MESSAGE},
-            {"role": "user",   "content": raw_prompt}
-        ]
-    )
-
-    try:
-        payload = completion.choices[0].message.content
-        clean_json = grab_json(payload)
-        return PromptAnalysis.model_validate_json(clean_json)
-    except Exception as e:
-        raise ValueError(f"LLM returned invalid JSON: {e}\nRaw:\n{payload}")
-# ---------- API Route ----------
-
-@app.post("/analyze-prompt", response_model=PromptAnalysis)
-def analyze_endpoint(body: PromptRequest):
-    try:
-        return analyze_prompt(body.prompt)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-
-#---------- Suggest prompt----------
-class ImprovementSuggestions(BaseModel):
-    items: list[str]          # bullet-style tips
-
-SUGGESTION_SYSTEM = """\
-    You are Promptly, a prompt-improvement coach.
-
-    When given a raw prompt, produce 3-6 concise bullet suggestions that would
-    * measurably improve* the prompt.  Focus on:
-    • Clarity & specificity
-    • Tone / audience match
-    • Output-format hints
-    • Edge-case coverage
-    Return ONLY a JSON array of strings.  Do NOT wrap it in back-ticks.
-    """
-def suggest_improvements(raw_prompt: str, tone: Optional[str] = None) -> ImprovementSuggestions:
-    lead = f"The author’s tone is **{tone}**.\n" if tone else ""
-    response = client.chat.completions.create(
-        model=MODEL,
-        temperature=0.3,
-        messages=[
-            {
-                "role": "system",
-                "content": SUGGESTION_SYSTEM + "\n\n" + lead +
-                           "Tailor advice so the rewritten prompt preserves this tone."
-            },
-            {"role": "user", "content": raw_prompt},
-        ],
-    )
-    payload = response.choices[0].message.content
-    # strip ``` fences if the model still adds them
-    if payload.lstrip().startswith("```"):
-        payload = re.sub(r"^```(\w+)?\s*|```$", "", payload.strip(), flags=re.DOTALL).strip()
-    return ImprovementSuggestions(items=json.loads(payload))
-
-class SuggestRequest(BaseModel):
-    prompt: str
-    tone: Optional[str] = None   # formal, casual, etc.
-
-@app.post("/suggest-improvements", response_model=ImprovementSuggestions)
-def suggest_endpoint(body: SuggestRequest):
-    try:
-        return suggest_improvements(body.prompt, body.tone)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-
-#---------- Rewrite prompt----------
-
-class RewrittenPrompt(BaseModel):
-    prompt: str
-REWRITE_SYSTEM = """\
-You are PrettyPrompt, a prompt-rewriting assistant.
-
-Rewrite the user’s prompt so it is clearer, more specific, and follows best
-practice for large-language-model queries.  Preserve the user’s intent,
+Given a user's prompt, rewrite it to be clearer, more specific, and follows best
+practice for large-language-model queries.  Preserve the user's intent,
 tone, and any critical constraints, but improve structure, add formatting
-hints, and include examples if obviously beneficial.
-
-Return the *entire rewritten prompt* as raw text — **do not** wrap it in
-Markdown fences or JSON.
+hints, and include examples if obviously beneficial. Return ONLY the rewritten prompt text. 
+Do not add headers, prefaces, or examples—just the final prompt.
 """
-def rewrite_prompt(raw_prompt: str) -> RewrittenPrompt:
-    response = client.chat.completions.create(
+class AssistResponse(BaseModel):
+    prompt: str
+MODE_INSTRUCTIONS = {
+    "rewrite":  "Rewrite the prompt to be clearer and more specific.",
+    "shorten":  "Shorten the prompt while keeping its meaning.",
+    "lengthen": "Expand the prompt with more detail.",
+    "casual":   "Rewrite the prompt in a friendly, casual tone.",
+    "formal":   "Rewrite the prompt in a formal, professional tone."
+}
+
+GUIDES = {
+    "gpt4o":  "• Use a single SYSTEM message.\n• Prefer numbered steps.\n• Cap length at 1500 tokens.",
+    "claude": "• Begin with 'Assistant:'.\n• End with 'Sure — here you go!'.\n• Use triple-hash ### sections.",
+    "gemini": "• Use ### Instruction / ### Context sections.\n• Put constraints in bullet list.\n• Avoid system role.",
+    "mistral": "• Use a single SYSTEM message.\n• Prefer numbered steps.\n• Cap length at 1500 tokens.",
+    "llama3": "• Use a single SYSTEM message.\n• Prefer numbered steps.\n• Cap length at 1500 tokens."
+}
+
+def build_prompt(base: str, req: AssistRequest) -> str:
+    instruction = MODE_INSTRUCTIONS[req.mode]
+    guide       = GUIDES[req.target_model]
+
+    prompt = f"""{instruction}
+
+    ### Target model rules
+    {guide}
+
+    ### Original prompt
+    {base}
+
+    ### Rewritten prompt
+    """
+    if req.context:
+        prompt += "\n\n--- Conversation context ---\n" + "\n".join(req.context[-3:])
+    return prompt
+
+def assist(req: AssistRequest) -> AssistResponse:
+
+    # synthesize if user toggled it AND none exist
+    base_prompt = req.prompt
+    if req.synth_examples:
+        fewshot = client.chat.completions.create(
+            model=MODEL,
+            temperature=0.5,
+            messages=[
+                {"role":"system","content":"Generate ONE realistic input→output pair illustrating the prompt below."},
+                {"role":"user","content": req.prompt}
+            ]
+        ).choices[0].message.content.strip()
+        base_prompt = f"{req.prompt}\n\n### Example\n{fewshot}"
+
+    messages = [
+        {"role": "system", "content": PROMPT_ASSIST},
+        {"role": "user", "content": build_prompt(base_prompt, req)}
+    ]
+    if req.context:
+        ctx = "\n\n--- Conversation context ---\n" + "\n".join(req.context[-3:])
+        messages[1]["content"] += ctx
+
+    resp = client.chat.completions.create(
+        model=MODEL, temperature=0.3, messages=messages
+    )
+    text = resp.choices[0].message.content.strip()
+    return AssistResponse(prompt=text)
+
+@app.post("/prompt-assist", response_model=AssistResponse)
+def assist_endpoint(body: AssistRequest):
+    return assist(body)
+
+
+GRADE_SYSTEM = """\
+You are an unbiased evaluator. You’ll receive:
+- Task description
+- Answer A
+- Answer B
+
+For each criterion give an integer 1-5 (higher is better) and return ONLY strict JSON:
+
+{
+  "criteria": [
+    { "name": "relevance",   "score_a": <int>, "score_b": <int> },
+    { "name": "completeness","score_a": <int>, "score_b": <int> },
+    { "name": "style",       "score_a": <int>, "score_b": <int> },
+    { "name": "conciseness", "score_a": <int>, "score_b": <int> }
+  ]
+}
+No extra text.
+"""
+
+router = APIRouter()
+def ask_llm(prompt: str) -> str:
+    resp = client.chat.completions.create(
         model=MODEL,
         temperature=0.3,
-        messages=[
-            {"role": "system", "content": REWRITE_SYSTEM},
-            {"role": "user", "content": raw_prompt},
-        ],
+        messages=[{"role":"user","content":prompt}]
     )
-    rewritten = response.choices[0].message.content.strip()
-    # strip ``` fences if the model ignored instructions
-    if rewritten.startswith("```"):
-        rewritten = re.sub(r"^```.*?\n|\n```$", "", rewritten, flags=re.DOTALL).strip()
-    return RewrittenPrompt(prompt=rewritten)
+    return resp.choices[0].message.content.strip()
 
+@app.post("/compare", response_model=CompareResponse)
+def compare(req: CompareRequest):
+    # 1. produce answers A and B
+    answer_a = ask_llm(req.original_prompt)
+    answer_b = ask_llm(req.rewritten_prompt)
 
-@app.post("/rewrite-prompt", response_model=RewrittenPrompt)
-def rewrite_endpoint(body: PromptRequest):
-    try:
-        return rewrite_prompt(body.prompt)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    # 2. grade
+    grading_payload = f"""
+Task: {req.task_description or 'Use the prompt itself to infer the task.'}
 
+Answer A:
+{answer_a}
 
+Answer B:
+{answer_b}
+"""
+    raw = client.chat.completions.create(
+        model=MODEL,
+        temperature=0.0,
+        messages=[
+            {"role":"system","content":GRADE_SYSTEM},
+            {"role":"user","content":grading_payload}
+        ]
+    ).choices[0].message.content
 
+    # strip fences if any
+    raw = re.sub(r"^```json|```$", "", raw.strip(), flags=re.DOTALL).strip()
+    data = json.loads(raw)
 
+    # 3. build response
+    criteria = [
+        Criterion(
+            name=c["name"],
+            score_original=c["score_a"],
+            score_rewrite=c["score_b"]
+        ) for c in data["criteria"]
+    ]
+    tx = sum(c.score_original for c in criteria)
+    ty = sum(c.score_rewrite  for c in criteria)
+
+    return CompareResponse(
+        answer_original = answer_a,
+        answer_rewrite  = answer_b,
+        criteria        = criteria,
+        total_original  = tx,
+        total_rewrite   = ty
+    )
