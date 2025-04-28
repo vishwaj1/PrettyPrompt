@@ -17,10 +17,7 @@ load_dotenv()
 api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
     raise ValueError("GROQ_API_KEY environment variable is not set")
-client = Groq(
-    api_key=api_key,
-    base_url="https://api.groq.com/v1"  # Explicitly set base URL
-)
+client = Groq(api_key=api_key)
 MODEL = os.getenv("MODEL", "llama2-70b-4096")
 
 app = FastAPI(title="Promptly Analyzer", version="0.1.0")
