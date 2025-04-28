@@ -23,7 +23,7 @@ MODEL = os.getenv("MODEL", "llama2-70b-4096")
 app = FastAPI(title="Promptly Analyzer", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://prettyprompt.vercel.app/"],  # or ["*"] during dev
+    allow_origins=["https://prettyprompt.vercel.app"],  # or ["*"] during dev
     allow_credentials=True,
     allow_methods=["*"],      # <-- include OPTIONS automatically
     allow_headers=["*"],      # allow Content-Type, Authorization, etc.
