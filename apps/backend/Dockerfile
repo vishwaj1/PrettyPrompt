@@ -1,6 +1,11 @@
 # Use Python 3.11.10 as the base image (compatible with the dependencies)
 FROM python:3.13.3-slim-bookworm
 
+ENV HTTP_PROXY=""  
+ENV HTTPS_PROXY="" 
+ENV http_proxy=""  
+ENV https_proxy=""
+
 # Set working directory in the container
 WORKDIR /app
 
