@@ -1,6 +1,6 @@
 import os
 
-# ─── Remove any proxy env vars so Groq() won’t inherit them ───
+# ─── Remove any proxy env vars so Groq() won't inherit them ───
 for v in ("HTTP_PROXY","HTTPS_PROXY","http_proxy","https_proxy"):
     os.environ.pop(v, None)
 
@@ -13,6 +13,11 @@ from typing import Optional, Literal, List
 from models import CompareRequest, CompareResponse, Criterion
 
 import re,json
+import groq
+from fastapi import HTTPException
+import time
+
+
 load_dotenv()
 api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
@@ -100,32 +105,62 @@ def build_prompt(base: str, req: AssistRequest) -> str:
         prompt += "\n\n--- Conversation context ---\n" + "\n".join(req.context[-3:])
     return prompt
 
-def assist(req: AssistRequest) -> AssistResponse:
+def call_groq_with_retry(model: str, temperature: float, messages: list[dict]) -> groq._base_client.CompletionResponse:
+    max_attempts = 3
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return client.chat.completions.create(
+                model=model,
+                temperature=temperature,
+                messages=messages
+            )
+        except groq.InternalServerError as e:
+            # if it's the last attempt, re-raise so our outer code can handle it
+            if attempt == max_attempts:
+                raise
+            # otherwise wait (2^attempt seconds) then retry
+            time.sleep(2 ** attempt)
 
-    # synthesize if user toggled it AND none exist
+def assist(req: AssistRequest) -> AssistResponse:
     base_prompt = req.prompt
     if req.synth_examples:
-        fewshot = client.chat.completions.create(
-            model=MODEL,
-            temperature=0.5,
-            messages=[
-                {"role":"system","content":"Generate ONE realistic input→output pair illustrating the prompt below."},
-                {"role":"user","content": req.prompt}
-            ]
-        ).choices[0].message.content.strip()
-        base_prompt = f"{req.prompt}\n\n### Example\n{fewshot}"
+        # generate example with retry
+        try:
+            fewshot_resp = call_groq_with_retry(
+                model=MODEL,
+                temperature=0.5,
+                messages=[
+                    {"role":"system","content":"Generate ONE realistic input→output pair illustrating the prompt below."},
+                    {"role":"user","content": req.prompt}
+                ]
+            )
+            fewshot = fewshot_resp.choices[0].message.content.strip()
+            base_prompt = f"{req.prompt}\n\n### Example\n{fewshot}"
+        except groq.InternalServerError:
+            # give up on examples, but continue without them
+            base_prompt = req.prompt
 
     messages = [
-        {"role": "system", "content": PROMPT_ASSIST},
-        {"role": "user", "content": build_prompt(base_prompt, req)}
+        {"role":"system","content": PROMPT_ASSIST},
+        {"role":"user",  "content": build_prompt(base_prompt, req)}
     ]
     if req.context:
         ctx = "\n\n--- Conversation context ---\n" + "\n".join(req.context[-3:])
         messages[1]["content"] += ctx
 
-    resp = client.chat.completions.create(
-        model=MODEL, temperature=0.3, messages=messages
-    )
+    try:
+        resp = call_groq_with_retry(
+            model=MODEL,
+            temperature=0.3,
+            messages=messages
+        )
+    except groq.InternalServerError:
+        # translate to HTTP 503
+        raise HTTPException(
+            status_code=503,
+            detail="Upstream model service is unavailable; please try again shortly."
+        )
+
     text = resp.choices[0].message.content.strip()
     return AssistResponse(prompt=text)
 
@@ -135,7 +170,7 @@ def assist_endpoint(body: AssistRequest):
 
 
 GRADE_SYSTEM = """\
-You are an unbiased evaluator. You’ll receive:
+You are an unbiased evaluator. You'll receive:
 - Task description
 - Answer A
 - Answer B
