@@ -105,7 +105,7 @@ def build_prompt(base: str, req: AssistRequest) -> str:
         prompt += "\n\n--- Conversation context ---\n" + "\n".join(req.context[-3:])
     return prompt
 
-def call_groq_with_retry(model: str, temperature: float, messages: list[dict]) -> groq._base_client.CompletionResponse:
+def call_groq_with_retry(model: str, temperature: float, messages: list[dict]):
     max_attempts = 3
     for attempt in range(1, max_attempts + 1):
         try:
