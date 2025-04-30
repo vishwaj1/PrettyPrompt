@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import Image from 'next/image';
 
 type Mode   = 'rewrite' | 'shorten' | 'lengthen' | 'casual' | 'formal';
 type Target = 'gpt4o' | 'claude' | 'gemini' | 'mistral' | 'llama3';
@@ -148,34 +149,48 @@ export default function PrettyPromptPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 dark:from-zinc-900 dark:via-zinc-950 dark:to-zinc-900">
       {/* Header */}
-      <header className="w-full flex justify-between items-center px-8 py-5 shadow-lg bg-white/90 dark:bg-zinc-900/90 backdrop-blur border-b border-blue-100 dark:border-zinc-800 sticky top-0 z-20">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-blue-700 dark:text-emerald-400 tracking-tight">
-          PrettyPrompt
-        </h1>
-        {session ? (
-          <button
-            onClick={() => signOut()}
-            className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-semibold shadow hover:from-blue-700 hover:to-emerald-600 transition"
-          >
-            Sign&nbsp;out&nbsp;({session.user?.email})
-          </button>
-        ) : (
-          <div className="flex gap-3">
-            <a
-              href='/login'
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
-            >
-              Sign&nbsp;in
-            </a>
-            <a
-              href="/register"
-              className="px-4 py-2 rounded-lg bg-emerald-100 text-emerald-800 font-semibold shadow hover:bg-emerald-200 transition"
-            >
-              Sign&nbsp;up
-            </a>
-          </div>
-        )}
-      </header>
+<header className="w-full flex justify-between items-center px-8 py-5 shadow-lg bg-white/90 dark:bg-zinc-900/90 backdrop-blur border-b border-blue-100 dark:border-zinc-800 sticky top-0 z-20">
+  <div className="flex items-center gap-3">
+    {/* Circular logo */}
+    <Image
+      src="/logo.png"
+      alt="PrettyPrompt logo"
+      width={40}
+      height={40}
+      className="rounded-full"
+      priority
+    />
+
+    {/* App title */}
+    <h1 className="text-3xl md:text-4xl font-extrabold text-blue-700 dark:text-emerald-400 tracking-tight">
+      PrettyPrompt
+    </h1>
+  </div>
+
+  {session ? (
+    <button
+      onClick={() => signOut()}
+      className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-semibold shadow hover:from-blue-700 hover:to-emerald-600 transition"
+    >
+      Sign&nbsp;out&nbsp;({session.user?.email})
+    </button>
+  ) : (
+    <div className="flex gap-3">
+      <a
+        href="/login"
+        className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+      >
+        Sign&nbsp;in
+      </a>
+      <a
+        href="/register"
+        className="px-4 py-2 rounded-lg bg-emerald-100 text-emerald-800 font-semibold shadow hover:bg-emerald-200 transition"
+      >
+        Sign&nbsp;up
+      </a>
+    </div>
+  )}
+</header>
 
       <main className="mx-auto max-w-3xl p-6 space-y-8">
         {/* Description */}
@@ -245,7 +260,7 @@ export default function PrettyPromptPage() {
         {/* Result cards */}
         {Object.keys(results).length > 0 && (
           <section className="grid md:grid-cols-2 gap-6 mt-8">
-            {(Object.keys(results) as Target[]).map(id => (
+            {(Object.keys(results) as Target[]).map(id => chosen[id] && (
               <div key={id} className="border rounded-2xl p-6 bg-white/90 dark:bg-zinc-900/90 shadow-lg">
                 <h3 className="font-semibold mb-2 text-center text-blue-700 dark:text-emerald-400 text-lg">{MODELS.find(m => m.id === id)?.label}</h3>
                 <pre className="whitespace-pre-wrap text-base leading-6 text-gray-800 dark:text-zinc-100">{results[id]}</pre>

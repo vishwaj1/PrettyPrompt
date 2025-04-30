@@ -5,6 +5,9 @@ import Providers from './providers';          // ← new
 export const metadata = {
   title: 'PrettyPrompt',
   description: 'Prompt optimizer',
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({
