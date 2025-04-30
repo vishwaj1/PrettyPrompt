@@ -60,7 +60,6 @@ class AssistRequest(BaseModel):
     context: Optional[List[str]] = None
     synth_examples: bool = False          # ← NEW toggle from the UI
 
-# core system guidance
 PROMPT_ASSIST = """\
 You are PrettyPrompt, the world’s leading prompt‐engineering assistant.  
 When given a user’s raw prompt, produce a single, final rewritten prompt that is:  
@@ -70,7 +69,8 @@ When given a user’s raw prompt, produce a single, final rewritten prompt that 
 
 Return **only** the rewritten prompt text—no explanations, no examples, no markdown fences, no extra whitespace."""
 
-# mode‐specific tweaks
+class AssistResponse(BaseModel):
+    prompt: str
 MODE_INSTRUCTIONS = {
     "rewrite":  "Rewrite the prompt to be maximally clear, specific, and well-structured for an advanced LLM.",
     "shorten":  "Condense the prompt to its essential elements without losing meaning or required details.",
@@ -79,7 +79,6 @@ MODE_INSTRUCTIONS = {
     "formal":   "Rephrase the prompt in a professional, formal style, using full sentences and precise vocabulary."
 }
 
-# per-model stylistic & technical guidelines
 GUIDES = {
     "gpt4o":   "• Use a single SYSTEM message only.\n• Structure as: Introduction, Steps, Constraints.\n• Keep total tokens under 1500.\n• Avoid role labels (e.g., don’t include “User:” or “Assistant:”).",
     "claude":  "• Start with “Assistant:”.\n• Use triple-hash (###) to separate sections.\n• Conclude with “Sure — here is the revised prompt.” removed; return only the prompt.\n• Keep tone warm and explanatory.",
