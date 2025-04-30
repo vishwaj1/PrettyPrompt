@@ -60,31 +60,32 @@ class AssistRequest(BaseModel):
     context: Optional[List[str]] = None
     synth_examples: bool = False          # ← NEW toggle from the UI
 
+# core system guidance
 PROMPT_ASSIST = """\
-You are PrettyPrompt, an expert prompt improver.
+You are PrettyPrompt, the world’s leading prompt‐engineering assistant.  
+When given a user’s raw prompt, produce a single, final rewritten prompt that is:  
+• Clear and unambiguous  
+• Structured for optimal LLM performance (use headings, numbered steps, bullets where helpful)  
+• True to the user’s original intent, tone, and constraints  
 
-Given a user's prompt, rewrite it to be clearer, more specific, and follows best
-practice for large-language-model queries.  Preserve the user's intent,
-tone, and any critical constraints, but improve structure, add formatting
-hints, and include examples if obviously beneficial. Return ONLY the rewritten prompt text. 
-Do not add headers, prefaces, or examples—just the final prompt.
-"""
-class AssistResponse(BaseModel):
-    prompt: str
+Return **only** the rewritten prompt text—no explanations, no examples, no markdown fences, no extra whitespace."""
+
+# mode‐specific tweaks
 MODE_INSTRUCTIONS = {
-    "rewrite":  "Rewrite the prompt to be clearer and more specific.",
-    "shorten":  "Shorten the prompt while keeping its meaning.",
-    "lengthen": "Expand the prompt with more detail.",
-    "casual":   "Rewrite the prompt in a friendly, casual tone.",
-    "formal":   "Rewrite the prompt in a formal, professional tone."
+    "rewrite":  "Rewrite the prompt to be maximally clear, specific, and well-structured for an advanced LLM.",
+    "shorten":  "Condense the prompt to its essential elements without losing meaning or required details.",
+    "lengthen": "Expand the prompt with concrete details, examples, or clarifications to ensure completeness.",
+    "casual":   "Rephrase the prompt in a relaxed, conversational tone while preserving all constraints.",
+    "formal":   "Rephrase the prompt in a professional, formal style, using full sentences and precise vocabulary."
 }
 
+# per-model stylistic & technical guidelines
 GUIDES = {
-    "gpt4o":  "• Use a single SYSTEM message.\n• Prefer numbered steps.\n• Cap length at 1500 tokens.",
-    "claude": "• Begin with 'Assistant:'.\n• End with 'Sure — here you go!'.\n• Use triple-hash ### sections.",
-    "gemini": "• Use ### Instruction / ### Context sections.\n• Put constraints in bullet list.\n• Avoid system role.",
-    "mistral": "• Use a single SYSTEM message.\n• Prefer numbered steps.\n• Cap length at 1500 tokens.",
-    "llama3": "• Use a single SYSTEM message.\n• Prefer numbered steps.\n• Cap length at 1500 tokens."
+    "gpt4o":   "• Use a single SYSTEM message only.\n• Structure as: Introduction, Steps, Constraints.\n• Keep total tokens under 1500.\n• Avoid role labels (e.g., don’t include “User:” or “Assistant:”).",
+    "claude":  "• Start with “Assistant:”.\n• Use triple-hash (###) to separate sections.\n• Conclude with “Sure — here is the revised prompt.” removed; return only the prompt.\n• Keep tone warm and explanatory.",
+    "gemini":  "• Omit SYSTEM role entirely; write directly as the revised prompt.\n• Use “### Instruction” and “### Context” headings.\n• List constraints as bullet points at the top.\n• Avoid meta-commentary.",
+    "mistral": "• Use one clear SYSTEM message.\n• Organize into numbered steps and bullet constraints.\n• Limit the prompt to 1500 tokens or fewer.\n• Do not include example inputs/outputs.",
+    "llama3":  "• Use a single SYSTEM message.\n• Format as: 1) Task Description, 2) Details, 3) Constraints.\n• Keep language concise and explicit.\n• Ensure total length stays under 1500 tokens."
 }
 
 def build_prompt(base: str, req: AssistRequest) -> str:
