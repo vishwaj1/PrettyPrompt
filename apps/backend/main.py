@@ -80,12 +80,52 @@ MODE_INSTRUCTIONS = {
 }
 
 GUIDES = {
-    "gpt4o":   "• Use a single SYSTEM message only.\n• Structure as: Introduction, Steps, Constraints.\n• Keep total tokens under 1500.\n• Avoid role labels (e.g., don’t include “User:” or “Assistant:”).",
-    "claude":  "• Start with “Assistant:”.\n• Use triple-hash (###) to separate sections.\n• Conclude with “Sure — here is the revised prompt.” removed; return only the prompt.\n• Keep tone warm and explanatory.",
-    "gemini":  "• Omit SYSTEM role entirely; write directly as the revised prompt.\n• Use “### Instruction” and “### Context” headings.\n• List constraints as bullet points at the top.\n• Avoid meta-commentary.",
-    "mistral": "• Use one clear SYSTEM message.\n• Organize into numbered steps and bullet constraints.\n• Limit the prompt to 1500 tokens or fewer.\n• Do not include example inputs/outputs.",
-    "llama3":  "• Use a single SYSTEM message.\n• Format as: 1) Task Description, 2) Details, 3) Constraints.\n• Keep language concise and explicit.\n• Ensure total length stays under 1500 tokens."
+    "gpt4o": (
+        "• Use a single SYSTEM message summarizing the overall objective.\n"
+        "• Include a brief context line if needed.\n"
+        "• Present the main actions as a numbered list and constraints as bullet points.\n"
+        "• Avoid any “User:” or “Assistant:” labels.\n"
+        "• Keep the total prompt under 1500 tokens.\n"
+        "• Do not add examples unless explicitly requested."
+    ),
+    "claude": (
+        "• Start with “Assistant:” followed immediately by the rewritten prompt.\n"
+        "• Use ### headings to separate sections, e.g.:\n"
+        "  ### Prompt\n"
+        "  ### Constraints\n"
+        "  ### Context\n"
+        "• Never wrap in code fences or markdown blocks.\n"
+        "• Maintain a warm, explanatory tone.\n"
+        "• Return only the final prompt text—no closing remarks."
+    ),
+    "gemini": (
+        "• Omit SYSTEM messages; output the prompt directly.\n"
+        "• Use “### Instruction:” for the task and “### Context:” for background.\n"
+        "• Add a “### Constraints:” section with each constraint as a bullet.\n"
+        "• Keep language concise and directive.\n"
+        "• Do not include any meta-commentary or salutations."
+    ),
+    "mistral": (
+        "• Use one clear SYSTEM message to frame the rewrite goal.\n"
+        "• Structure the prompt in three sections:\n"
+        "  1) Task Description\n"
+        "  2) Detailed Instructions (numbered)\n"
+        "  3) Constraints List (bullets)\n"
+        "• Ensure total length ≤1500 tokens.\n"
+        "• Do not insert examples or extra narrative."
+    ),
+    "llama3": (
+        "• Begin with a SYSTEM message stating the purpose.\n"
+        "• Follow with a USER message formatted as:\n"
+        "  1) Task Description\n"
+        "  2) Supporting Details\n"
+        "  3) Constraints\n"
+        "• Use precise, concise language.\n"
+        "• Keep the prompt under 1500 tokens.\n"
+        "• Avoid redundant or vague phrasing."
+    )
 }
+
 
 def build_prompt(base: str, req: AssistRequest) -> str:
     instruction = MODE_INSTRUCTIONS[req.mode]
