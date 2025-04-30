@@ -17,6 +17,7 @@ model User {
   passwordHash  String?        // for credentials flow
   accounts      Account[]
   sessions      Session[]
+  prompts     Prompt[] 
 }
 
 model Account {
@@ -49,3 +50,17 @@ model VerificationToken {
   expires    DateTime
   @@unique([identifier, token])
 }
+
+model Prompt {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  originalPrompt   String
+  rewrittenPrompt  String
+  mode             String
+  targetModel      String
+  createdAt        DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+

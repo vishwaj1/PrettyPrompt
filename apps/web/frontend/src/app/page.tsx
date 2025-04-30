@@ -1,96 +1,144 @@
 'use client';
 
-
-import { useState } from 'react';
-import { useSession, signOut } from 'next-auth/react'; 
+import { useState, useEffect } from 'react';
+import { useSession, signOut } from 'next-auth/react';
 
 type Mode   = 'rewrite' | 'shorten' | 'lengthen' | 'casual' | 'formal';
-type Target = 'gpt4o' | 'claude' | 'gemini' | 'mistral' | 'llama3';          // same three models
+type Target = 'gpt4o' | 'claude' | 'gemini' | 'mistral' | 'llama3';
+
+type PromptHistoryItem = {
+  id: string;
+  originalPrompt: string;
+  rewrittenPrompt: string;
+  mode: Mode;
+  targetModel: Target;
+  createdAt: string;
+};
 
 type Criterion = { name: string; score_original: number; score_rewrite: number; };
 type CompareResponse = {
-  answer_original: string; answer_rewrite: string;
-  criteria: Criterion[];  total_original: number; total_rewrite: number;
+  answer_original: string;
+  answer_rewrite:  string;
+  criteria:        Criterion[];
+  total_original:  number;
+  total_rewrite:   number;
 };
 
 const API = process.env.NEXT_PUBLIC_API_URL;
-
-/* ⇢ model list for check-boxes */
 const MODELS: { id: Target; label: string }[] = [
   { id: 'gpt4o',  label: 'GPT-4o'   },
   { id: 'claude', label: 'Claude 3' },
   { id: 'gemini', label: 'Gemini 1.5' },
-  { id: 'mistral', label: 'Mistral 8×22B' },
+  { id: 'mistral',label: 'Mistral 8×22B' },
   { id: 'llama3', label: 'Llama-3 70B' }
 ];
 
 export default function PrettyPromptPage() {
-
-  const { data: session } = useSession();                        // ▼ NEW
-  const userEmail = session?.user?.email ?? 'anonymous';
+  const { data: session } = useSession();
+  //const userEmail = session?.user?.email ?? 'anonymous';
 
   const [draft,   setDraft]   = useState('');
   const [busy,    setBusy]    = useState(false);
-  const [fewShot, setFewShot] = useState(false);   // NEW toggle
+  const [fewShot, setFewShot] = useState(false);
 
-
-  /* NEW – chosen models & their results */
-  const [chosen,  setChosen]  = useState<Record<Target, boolean>>({ gpt4o:true, claude:false, gemini:false, mistral:false, llama3:false });
+  const [chosen,  setChosen]  = useState<Record<Target, boolean>>({
+    gpt4o:true, claude:false, gemini:false, mistral:false, llama3:false
+  });
   const [results, setResults] = useState<Record<Target, string>>({
-    gpt4o: '',
-    claude: '',
-    gemini: '',
-    mistral: '',
-    llama3: ''
+    gpt4o:'', claude:'', gemini:'', mistral:'', llama3:''
   });
 
   const [compare, setCompare] = useState<CompareResponse|null>(null);
+  const [history, setHistory] = useState<PromptHistoryItem[]>([]);
 
-  const [history, setHistory] = useState<string[]>([]);    
-
-  const pushHistory = (text: string) => {
-    const key = `pp-history-${userEmail}`;
-    const updated = [...history.slice(-19), text];               // max 20
-    setHistory(updated);
-    localStorage.setItem(key, JSON.stringify(updated));
-  };
+  // Fetch user history on mount
+  useEffect(() => {
+    if (!session) return;
+    fetch('/api/prompts')
+      .then(res => res.json())
+      .then((data: PromptHistoryItem[]) => setHistory(data))
+      .catch(console.error);
+  }, [session]);
 
   const toggle = (id: Target) => setChosen(p => ({ ...p, [id]: !p[id] }));
 
-  /* ------------- backend call for EACH checked model ------------- */
   const assist = async (mode: Mode) => {
     if (!draft.trim()) return;
     const active = (Object.keys(chosen) as Target[]).filter(k => chosen[k]);
-    if (active.length === 0) { alert('Select at least one model'); return; }
+    if (active.length === 0) {
+      alert('Select at least one model');
+      return;
+    }
 
     setBusy(true);
     try {
-      const pairs = await Promise.all(active.map(async id => {
-        const res = await fetch(`${API}/prompt-assist`, {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ prompt:draft, mode, target_model:id,synth_examples:fewShot })
-        });
-        const data:{prompt:string} = await res.json();
-        return [id, data.prompt] as const;
-      }));
-      const map = Object.fromEntries(pairs) as Record<Target, string>;
-      setResults(map);
-      /* save the first rewritten prompt to history */
-      pushHistory(Object.values(map)[0]);      
-    } catch {
-      alert('Backend error – retry.');
-    } finally { setBusy(false); }
+      const pairs = await Promise.all(
+        active.map(async targetModel => {
+          // 1) Call your FastAPI backend
+          const res = await fetch(`${API}/prompt-assist`, {
+            method: 'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({
+              prompt: draft,
+              mode,
+              target_model: targetModel,
+              synth_examples: fewShot,
+              context: history.slice(-3).map(h => h.rewrittenPrompt),
+            }),
+          });
+          if (!res.ok) throw new Error('LLM error');
+          const { prompt: rewritten } = await res.json();
+
+          // 2) Persist into your Next.js API
+          fetch('/api/prompts', {
+            method: 'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({
+              original: draft,
+              rewritten,
+              mode,
+              targetModel,
+            }),
+          }).catch(console.error);
+
+          return [targetModel, rewritten] as const;
+        })
+      );
+
+      const resultMap = Object.fromEntries(pairs) as Record<Target, string>;
+      setResults(resultMap);
+
+      // 3) Prepend the newest to history
+      const first = pairs[0];
+      const newEntry = {
+        id:        'temporary', // will refresh on next full GET
+        originalPrompt: draft,
+        rewrittenPrompt: first[1],
+        mode,
+        targetModel: first[0],
+        createdAt: new Date().toISOString(),
+      };
+      setHistory(h => [newEntry, ...h].slice(0, 20));
+
+    } catch (err) {
+      console.error(err);
+      alert('Backend error – please retry.');
+    } finally {
+      setBusy(false);
+    }
   };
 
-  /* ------------- unchanged benchmark (uses first result) ---------- */
   const runCompare = async () => {
     const firstOut = Object.values(results)[0];
     if (!draft.trim() || !firstOut) return;
     setBusy(true);
     const res = await fetch(`${API}/compare`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ original_prompt:draft, rewritten_prompt:firstOut })
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        original_prompt:  draft,
+        rewritten_prompt: firstOut,
+      }),
     });
     setCompare(await res.json());
     setBusy(false);
@@ -253,20 +301,49 @@ export default function PrettyPromptPage() {
         )}
 
         {/* Prompt history */}
-        {session && history.length > 0 && (
-          <details className="mt-8 text-sm">
-            <summary className="cursor-pointer underline">
-              Prompt History ({history.length})
-            </summary>
-            <ul className="mt-2 space-y-2 max-h-48 overflow-y-auto border p-2 rounded bg-white/80 dark:bg-zinc-900/80">
-              {history.slice().reverse().map((h, i) => (
-                <li key={i} className="border-b pb-1 last:border-none whitespace-pre-wrap">
-                  {h}
-                </li>
-              ))}
-            </ul>
-          </details>
-        )}
+        {/* Prompt history */}
+      {session && history.length > 0 && (
+        <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-2">
+            Prompt History ({history.length})
+          </h3>
+          <div className="space-y-4 max-h-64 overflow-y-auto">
+            {history.map(item => (
+              <div
+                key={item.id}
+                className="p-4 bg-white/90 dark:bg-zinc-800 rounded-lg border"
+              >
+                <div className="flex justify-between text-xs text-gray-500 dark:text-zinc-400 mb-1">
+                  <span>{new Date(item.createdAt).toLocaleString()}</span>
+                  <span className="capitalize">
+                    {item.mode} / {item.targetModel}
+                  </span>
+                </div>
+                <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-zinc-100">
+                  {item.rewrittenPrompt}
+                </pre>
+                <div className="mt-2 flex justify-end gap-2">
+                  <button
+                    className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 rounded"
+                    onClick={() => navigator.clipboard.writeText(item.rewrittenPrompt)}
+                  >
+                    Copy
+                  </button>
+                  <button
+                    className="px-2 py-1 text-xs bg-gray-100 dark:bg-zinc-700 text-gray-800 dark:text-zinc-200 rounded"
+                    onClick={() => {
+                      setDraft(item.originalPrompt);
+                      setResults({ ...results, [item.targetModel]: item.rewrittenPrompt });
+                    }}
+                  >
+                    Load
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       </main>
     </div>
   );
