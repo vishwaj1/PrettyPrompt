@@ -20,6 +20,13 @@ model User {
   prompts     Prompt[] 
 }
 
+model Otp {
+  id        String   @id @default(cuid())
+  email     String
+  codeHash  String   // hashed OTP
+  expiresAt DateTime
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
