@@ -11,30 +11,36 @@ function randomOTP() {
 }
 
 export async function POST(req: NextRequest) {
-  const { email} = await req.json()
-  // 1) Validate email & password as before…
+  try {
+    const { email } = await req.json()
 
-  // 2) Generate & store OTP
-  const code = randomOTP()
-  const codeHash = await hash(code, 10)
-  const expiresAt = new Date(Date.now() + 10*60*1000) // 10m
+    const code = randomOTP()
+    const codeHash = await hash(code, 10)
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
 
-  await prisma.otp.create({
-    data: { email, codeHash, expiresAt }
-  })
+    await prisma.otp.create({
+      data: { email, codeHash, expiresAt },
+    })
 
-  // 3) Send email
-  const transport = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: +process.env.SMTP_PORT!,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
-  })
-  await transport.sendMail({
-    from: 'no-reply@prettyprompt.app',
-    to:   email,
-    subject: 'Your PrettyPrompt signup code',
-    text:    `Your verification code is: ${code}\nThis code expires in 10 minutes.`
-  })
+    const transport = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: +process.env.SMTP_PORT!,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    })
 
-  return NextResponse.json({ ok: true })
+    await transport.sendMail({
+      from: 'no-reply@prettyprompt.app',
+      to: email,
+      subject: 'Your PrettyPrompt signup code',
+      text: `Your verification code is: ${code}\nThis code expires in 10 minutes.`,
+    })
+
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error('Error in request-otp:', error)
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+  }
 }

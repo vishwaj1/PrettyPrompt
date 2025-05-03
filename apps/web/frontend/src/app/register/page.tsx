@@ -34,9 +34,14 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/request-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email}),
       });
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json()
+      } catch (e) {
+        console.error('Invalid JSON response:', e)
+      }
       if (!res.ok) {
         setError(data.detail || 'Failed to send OTP.');
       } else {
