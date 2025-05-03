@@ -131,7 +131,7 @@ def build_prompt(base: str, req: AssistRequest) -> str:
     instruction = MODE_INSTRUCTIONS[req.mode]
     guide       = GUIDES[req.target_model]
 
-    prompt = f"""{instruction}
+    prompt = f"""{instruction} the original prompt to be maximally clear, specific, and well-structured for an advanced LLM.
 
     ### Target model rules
     {guide}
