@@ -189,48 +189,48 @@ export default function PrettyPromptPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 dark:from-zinc-900 dark:via-zinc-950 dark:to-zinc-900">
       {/* Header */}
-<header className="w-full flex justify-between items-center px-8 py-5 shadow-lg bg-white/90 dark:bg-zinc-900/90 backdrop-blur border-b border-blue-100 dark:border-zinc-800 sticky top-0 z-20">
-  <div className="flex items-center gap-3">
-    {/* Circular logo */}
-    <Image
-      src="/logo.png"
-      alt="PrettyPrompt logo"
-      width={40}
-      height={40}
-      className="rounded-full"
-      priority
-    />
+      <header className="w-full flex flex-wrap justify-between items-center px-4 py-3 md:px-8 md:py-5 shadow-lg bg-white/90 dark:bg-zinc-900/90 backdrop-blur border-b border-blue-100 dark:border-zinc-800 sticky top-0 z-20">
+        <div className="flex items-center gap-2">
+          <Image
+            src="/logo.png"
+            alt="PrettyPrompt logo"
+            width={40}
+            height={40}
+            className="rounded-full"
+            priority
+          />
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-blue-700 dark:text-emerald-400 tracking-tight">
+            PrettyPrompt
+          </h1>
+        </div>
 
-    {/* App title */}
-    <h1 className="text-3xl md:text-4xl font-extrabold text-blue-700 dark:text-emerald-400 tracking-tight">
-      PrettyPrompt
-    </h1>
-  </div>
+        {session ? (
+          <button
+            onClick={() => signOut()}
+            className="flex-shrink-0 px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-semibold shadow hover:from-blue-700 hover:to-emerald-600 transition"
+          >
+            <span className="hidden sm:inline">Sign&nbsp;out</span>
+            <span className="ml-1 truncate max-w-[100px]">({session.user?.email?.split('@')[0]})</span>
+          </button>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            <a
+              href="/login"
+              className="px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+            >
+              Sign&nbsp;in
+            </a>
+            <a
+              href="/register"
+              className="px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg bg-emerald-100 text-emerald-800 font-semibold shadow hover:bg-emerald-200 transition"
+            >
+              Sign&nbsp;up
+            </a>
+          </div>
+        )}
+      </header>
 
-  {session ? (
-    <button
-      onClick={() => signOut()}
-      className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-semibold shadow hover:from-blue-700 hover:to-emerald-600 transition"
-    >
-      Sign&nbsp;out&nbsp;({session.user?.email})
-    </button>
-  ) : (
-    <div className="flex gap-3">
-      <a
-        href="/login"
-        className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
-      >
-        Sign&nbsp;in
-      </a>
-      <a
-        href="/register"
-        className="px-4 py-2 rounded-lg bg-emerald-100 text-emerald-800 font-semibold shadow hover:bg-emerald-200 transition"
-      >
-        Sign&nbsp;up
-      </a>
-    </div>
-  )}
-</header>
+      
 
       <main className="mx-auto max-w-3xl p-6 space-y-8">
         {/* Description */}
@@ -357,58 +357,57 @@ export default function PrettyPromptPage() {
         )}
 
         {/* Prompt history */}
-        {/* Prompt history */}
-      {session && history.length > 0 && (
-        <section className="mt-8">
-          <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold mb-2">
-                Prompt History ({history.length})
-              </h3>
-              <button
-                className="text-sm text-red-600 hover:underline"
-                onClick={clearHistory}
-              >
-                Clear All
-              </button>
-            </div>
-          <div className="space-y-4 max-h-64 overflow-y-auto">
-            {history.map(item => (
-              <div
-                key={item.id}
-                className="p-4 bg-white/90 dark:bg-zinc-800 rounded-lg border"
-              >
-                <div className="flex justify-between text-xs text-gray-500 dark:text-zinc-400 mb-1">
-                  <span>{new Date(item.createdAt).toLocaleString()}</span>
-                  <span className="capitalize">
-                    {item.mode} / {item.targetModel}
-                  </span>
-                </div>
-                <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-zinc-100">
-                  {item.rewrittenPrompt}
-                </pre>
-                <div className="mt-2 flex justify-end gap-2">
-                  <button
-                    className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 rounded"
-                    onClick={() => navigator.clipboard.writeText(item.rewrittenPrompt)}
-                  >
-                    Copy
-                  </button>
-                  <button onClick={()=>deleteHistoryItem(item.id)} className="absolute top-1 right-1 text-xs text-red-500">Delete</button>
-                  <button
-                    className="px-2 py-1 text-xs bg-gray-100 dark:bg-zinc-700 text-gray-800 dark:text-zinc-200 rounded"
-                    onClick={() => {
-                      setDraft(item.originalPrompt);
-                      setResults({ ...results, [item.targetModel]: item.rewrittenPrompt });
-                    }}
-                  >
-                    Load
-                  </button>
-                </div>
+        {session && history.length > 0 && (
+          <section className="mt-8">
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold mb-2">
+                  Prompt History ({history.length})
+                </h3>
+                <button
+                  className="text-sm text-red-600 hover:underline"
+                  onClick={clearHistory}
+                >
+                  Clear All
+                </button>
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+            <div className="space-y-4 max-h-64 overflow-y-auto">
+              {history.map(item => (
+                <div
+                  key={item.id}
+                  className="p-4 bg-white/90 dark:bg-zinc-800 rounded-lg border"
+                >
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-zinc-400 mb-1">
+                    <span>{new Date(item.createdAt).toLocaleString()}</span>
+                    <span className="capitalize">
+                      {item.mode} / {item.targetModel}
+                    </span>
+                  </div>
+                  <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-zinc-100">
+                    {item.rewrittenPrompt}
+                  </pre>
+                  <div className="mt-2 flex justify-end gap-2">
+                    <button
+                      className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 rounded"
+                      onClick={() => navigator.clipboard.writeText(item.rewrittenPrompt)}
+                    >
+                      Copy
+                    </button>
+                    <button onClick={()=>deleteHistoryItem(item.id)} className="absolute top-1 right-1 text-xs text-red-500">Delete</button>
+                    <button
+                      className="px-2 py-1 text-xs bg-gray-100 dark:bg-zinc-700 text-gray-800 dark:text-zinc-200 rounded"
+                      onClick={() => {
+                        setDraft(item.originalPrompt);
+                        setResults({ ...results, [item.targetModel]: item.rewrittenPrompt });
+                      }}
+                    >
+                      Load
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );
