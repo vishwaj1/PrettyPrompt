@@ -294,12 +294,7 @@ export default function PrettyPromptPage() {
               <div key={id} className="border rounded-2xl p-6 bg-white/90 dark:bg-zinc-900/90 shadow-lg">
                 <h3 className="font-semibold mb-2 text-center text-blue-700 dark:text-emerald-400 text-lg">{MODELS.find(m => m.id === id)?.label}</h3>
                 <pre className="whitespace-pre-wrap text-base leading-6 text-gray-800 dark:text-zinc-100">{results[id]}</pre>
-                <button
-                  className="absolute top-3 right-3 p-1 bg-blue-100 dark:bg-blue-800 rounded"
-                  onClick={() => navigator.clipboard.writeText(results[id])}
-                >
-                  Copy
-                </button>
+                <button onClick={()=>navigator.clipboard.writeText(results[id])} className="absolute top-2 right-2 text-sm">Copy</button>
               </div>
             ))}
           </section>
@@ -388,6 +383,7 @@ export default function PrettyPromptPage() {
                   >
                     Copy
                   </button>
+                  <button onClick={()=>deleteHistoryItem(item.id)} className="absolute top-1 right-1 text-xs text-red-500">Delete</button>
                   <button
                     className="px-2 py-1 text-xs bg-gray-100 dark:bg-zinc-700 text-gray-800 dark:text-zinc-200 rounded"
                     onClick={() => {
@@ -396,12 +392,6 @@ export default function PrettyPromptPage() {
                     }}
                   >
                     Load
-                  </button>
-                  <button
-                    className="absolute top-2 right-2 text-xs text-red-600"
-                    onClick={() => deleteHistoryItem(item.id)}
-                  >
-                    Delete
                   </button>
                 </div>
               </div>
