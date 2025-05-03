@@ -4,7 +4,7 @@ import { hash }                      from 'bcryptjs'
 import nodemailer                    from 'nodemailer'
 import { PrismaClient } from '@prisma/client'
 
-export const prisma = new PrismaClient()
+const prisma = new PrismaClient()
 
 function randomOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString()
