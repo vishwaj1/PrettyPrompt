@@ -38,3 +38,22 @@ export async function GET() {
 
   return NextResponse.json(history)
 }
+
+export async function DELETE() {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  }
+  await prisma.prompt.deleteMany({ where: { userId: session.user.id } })
+  return NextResponse.json({ message: 'History cleared' }, { status: 200 })
+}
+
+export async function DELETEID(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  }
+  const { id } = await req.json()
+  await prisma.prompt.delete({ where: { id, userId: session.user.id } })
+  return NextResponse.json({ message: 'History item deleted' }, { status: 200 })
+}

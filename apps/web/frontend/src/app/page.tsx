@@ -154,7 +154,7 @@ export default function PrettyPromptPage() {
    // Delete single history item
    const deleteHistoryItem = useCallback(async (id: string) => {
     try {
-      await fetch(`/api/prompts/${id}`, { method: 'DELETE' });
+      await fetch(`/api/prompts`, { method: 'DELETEID', body: JSON.stringify({ id }) });
       setHistory(h => h.filter(item => item.id !== id));
     } catch (err) {
       console.error(err);
