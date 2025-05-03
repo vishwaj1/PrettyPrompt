@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import Image from 'next/image';
 
@@ -116,7 +116,7 @@ export default function PrettyPromptPage() {
       // 3) Prepend the newest to history
       const [firstModel, firstRewritten] = pairs[0];
       const newEntry = {
-        id:        'temporary', // will refresh on next full GET
+        id:        `tmp-${Date.now()}`, // will refresh on next full GET
         originalPrompt:   mode === 'rewrite'
                           ? draft
                           : (results[firstModel] || draft),
@@ -150,6 +150,30 @@ export default function PrettyPromptPage() {
     setCompare(await res.json());
     setBusy(false);
   };
+
+   // Delete single history item
+   const deleteHistoryItem = useCallback(async (id: string) => {
+    try {
+      await fetch(`/api/prompts/${id}`, { method: 'DELETE' });
+      setHistory(h => h.filter(item => item.id !== id));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete history item');
+    }
+  }, []);
+
+  // Clear all history
+  const clearHistory = useCallback(async () => {
+    if (!confirm('Are you sure you want to clear all history?')) return;
+    try {
+      await fetch('/api/prompts', { method: 'DELETE' });
+      setHistory([]);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to clear history');
+    }
+  }, []);
+
 
   /* ---------------- UI ---------------- */
   return (
@@ -270,6 +294,12 @@ export default function PrettyPromptPage() {
               <div key={id} className="border rounded-2xl p-6 bg-white/90 dark:bg-zinc-900/90 shadow-lg">
                 <h3 className="font-semibold mb-2 text-center text-blue-700 dark:text-emerald-400 text-lg">{MODELS.find(m => m.id === id)?.label}</h3>
                 <pre className="whitespace-pre-wrap text-base leading-6 text-gray-800 dark:text-zinc-100">{results[id]}</pre>
+                <button
+                  className="absolute top-3 right-3 p-1 bg-blue-100 dark:bg-blue-800 rounded"
+                  onClick={() => navigator.clipboard.writeText(results[id])}
+                >
+                  Copy
+                </button>
               </div>
             ))}
           </section>
@@ -325,9 +355,17 @@ export default function PrettyPromptPage() {
         {/* Prompt history */}
       {session && history.length > 0 && (
         <section className="mt-8">
-          <h3 className="text-lg font-semibold mb-2">
-            Prompt History ({history.length})
-          </h3>
+          <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold mb-2">
+                Prompt History ({history.length})
+              </h3>
+              <button
+                className="text-sm text-red-600 hover:underline"
+                onClick={clearHistory}
+              >
+                Clear All
+              </button>
+            </div>
           <div className="space-y-4 max-h-64 overflow-y-auto">
             {history.map(item => (
               <div
@@ -358,6 +396,12 @@ export default function PrettyPromptPage() {
                     }}
                   >
                     Load
+                  </button>
+                  <button
+                    className="absolute top-2 right-2 text-xs text-red-600"
+                    onClick={() => deleteHistoryItem(item.id)}
+                  >
+                    Delete
                   </button>
                 </div>
               </div>
