@@ -73,7 +73,7 @@ class AssistResponse(BaseModel):
     prompt: str
 MODE_INSTRUCTIONS = {
     "rewrite":  "Rewrite the prompt to be maximally clear, specific, and well-structured for an advanced LLM.",
-    "shorten":  "Condense the prompt to its essential elements without losing meaning or required details.",
+    "shorten":  "Condense the prompt to its essential elements without losing meaning or required details. Reduce the length of the prompt than the original prompt",
     "lengthen": "Expand the prompt with concrete details, examples, or clarifications to ensure completeness.",
     "casual":   "Rephrase the prompt in a relaxed, conversational tone while preserving all constraints.",
     "formal":   "Rephrase the prompt in a professional, formal style, using full sentences and precise vocabulary."
