@@ -157,7 +157,8 @@ export default function PrettyPromptPage() {
       const res = await fetch(`/api/prompts/${id}`, {
         method: 'DELETE',
         credentials: 'include',          // if you need cookies/session
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
       });
       if (!res.ok) {
         throw new Error(`Failed with status ${res.status}`);
