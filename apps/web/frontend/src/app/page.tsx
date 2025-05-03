@@ -154,13 +154,22 @@ export default function PrettyPromptPage() {
    // Delete single history item
    const deleteHistoryItem = useCallback(async (id: string) => {
     try {
-      await fetch(`/api/prompts/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/prompts/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',          // if you need cookies/session
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!res.ok) {
+        throw new Error(`Failed with status ${res.status}`);
+      }
+      // Remove from local state only on success
       setHistory(h => h.filter(item => item.id !== id));
     } catch (err) {
       console.error(err);
       alert('Failed to delete history item');
     }
   }, []);
+  
 
   // Clear all history
   const clearHistory = useCallback(async () => {
