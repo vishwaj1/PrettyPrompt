@@ -75,12 +75,16 @@ export default function PrettyPromptPage() {
     try {
       const pairs = await Promise.all(
         active.map(async targetModel => {
+          const basePrompt =
+          mode === 'rewrite'
+            ? draft
+            : results[targetModel] || draft;
           // 1) Call your FastAPI backend
           const res = await fetch(`${API}/prompt-assist`, {
             method: 'POST',
             headers:{ 'Content-Type':'application/json' },
             body: JSON.stringify({
-              prompt: draft,
+              prompt: basePrompt,
               mode,
               target_model: targetModel,
               synth_examples: fewShot,
@@ -110,13 +114,15 @@ export default function PrettyPromptPage() {
       setResults(resultMap);
 
       // 3) Prepend the newest to history
-      const first = pairs[0];
+      const [firstModel, firstRewritten] = pairs[0];
       const newEntry = {
         id:        'temporary', // will refresh on next full GET
-        originalPrompt: draft,
-        rewrittenPrompt: first[1],
+        originalPrompt:   mode === 'rewrite'
+                          ? draft
+                          : (results[firstModel] || draft),
+      rewrittenPrompt:  firstRewritten,
         mode,
-        targetModel: first[0],
+        targetModel: firstModel,
         createdAt: new Date().toISOString(),
       };
       setHistory(h => [newEntry, ...h].slice(0, 20));
