@@ -20,6 +20,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ detail: 'OTP code is required.' }, { status: 400 })
   }
 
+   // 3) Check if user already exists
+   const existing = await prisma.user.findUnique({ where: { email } })
+   if (existing) {
+     return NextResponse.json({ detail: 'Email already registered.' }, { status: 400 })
+   }
+
   // 2) Verify OTP
   const otpRecord = await prisma.otp.findFirst({ where: { email } })
   if (!otpRecord || otpRecord.expiresAt < new Date()) {
@@ -32,11 +38,7 @@ export async function POST(req: NextRequest) {
   // consume it
   await prisma.otp.deleteMany({ where: { email } })
 
-  // 3) Check if user already exists
-  const existing = await prisma.user.findUnique({ where: { email } })
-  if (existing) {
-    return NextResponse.json({ detail: 'Email already registered.' }, { status: 400 })
-  }
+ 
 
   // 4) Hash password & create user
   const passwordHash = await bcrypt.hash(password, 10)
