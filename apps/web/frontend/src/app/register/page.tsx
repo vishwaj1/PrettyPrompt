@@ -18,7 +18,17 @@ export default function RegisterPage() {
   const [code, setCode]         = useState(''); // OTP code
 
   // Email validation
- 
+  const isValidEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  // Step 1: request OTP
+  const handleRequestOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!isValidEmail(email)) return setError('Invalid email.');
+    if (password.length < 6) return setError('Password must be at least 6 characters.');
+    if (password !== confirm) return setError('Passwords do not match.');
+
     setBusy(true);
     try {
       const res = await fetch('/api/auth/request-otp', {
