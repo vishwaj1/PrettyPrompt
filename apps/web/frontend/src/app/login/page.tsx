@@ -48,18 +48,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 dark:from-zinc-900 dark:via-zinc-950 dark:to-zinc-900">
-      {/* Header */}
-      <header className="w-full flex justify-between items-center px-8 py-5 shadow-lg bg-white/90 dark:bg-zinc-900/90 backdrop-blur border-b border-blue-100 dark:border-zinc-800 sticky top-0 z-20">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-blue-700 dark:text-emerald-400 tracking-tight">
-          PrettyPrompt
-        </h1>
-        <Link
-          href="/register"
-          className="px-4 py-2 rounded-lg bg-emerald-100 text-emerald-800 font-semibold shadow hover:bg-emerald-200 transition"
-        >
-          Sign Up
-        </Link>
-      </header>
+      
 
       <main className="mx-auto max-w-md p-6 mt-12">
         <div className="rounded-2xl bg-white/80 dark:bg-zinc-900/80 shadow-lg p-8 border border-blue-100 dark:border-zinc-800">

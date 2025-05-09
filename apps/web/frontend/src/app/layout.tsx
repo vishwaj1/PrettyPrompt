@@ -1,6 +1,8 @@
 // src/app/layout.tsx
 import './globals.css';
 import Providers from './providers';          // ← new
+import Header from '@/components/Header';
+
 
 export const metadata = {
   title: 'PrettyPrompt',
@@ -18,7 +20,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Providers>{children}</Providers>     {/* now inside client boundary */}
+      <Providers>
+          <Header />
+          {children}
+        </Providers>    {/* now inside client boundary */}
       </body>
     </html>
   );

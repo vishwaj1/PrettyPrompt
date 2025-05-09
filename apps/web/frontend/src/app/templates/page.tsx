@@ -1,24 +1,44 @@
 // src/app/templates/page.tsx
 'use client';
-import Link from 'next/link';
 
-export default function TemplatesPage() {
+import { useState, useEffect } from 'react';
+import { TemplatesNav } from '@/components/TemplateNav'
+
+type Template = {
+  id:          string;
+  industry:    string;
+  topic:       string;
+  prompt:      string;
+  createdAt:   string;
+};
+
+
+export default function TemplatesIndexPage() {
+  const [templates, setTemplates] = useState<Template[]>([]);
+
+  useEffect(() => {
+    fetch('/api/templates')
+      .then(res => res.json())
+      .then(setTemplates)
+      .catch(console.error);
+  }, []);
+
+  const industries = Array.from(new Set(templates.map(t => t.industry)));
+
   return (
-    <main className="mx-auto max-w-3xl p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Prompt Templates</h1>
-      <p>Select an industry to browse or generate prompt templates.</p>
+    <div className="flex h-full min-h-screen">
+      <TemplatesNav industries={industries} />
 
-      <div className="flex gap-4">
-        {['legal','medical','e-commerce','marketing','hr'].map(ind => (
-          <Link
-            key={ind}
-            href={`/templates/${ind}`}
-            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-          >
-            {ind.charAt(0).toUpperCase()+ind.slice(1)}
-          </Link>
-        ))}
-      </div>
-    </main>
-  );
+      <main className="flex-1 p-6 overflow-y-auto">
+        <h2 className="text-2xl font-semibold mb-4">Select an industry →</h2>
+        <p className="text-sm text-gray-500">
+          Pick one of the industries on the left to view its templates.
+        </p>
+      </main>
+    </div>
+  )
 }
+
+
+
+

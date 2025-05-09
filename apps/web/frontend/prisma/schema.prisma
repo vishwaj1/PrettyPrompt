@@ -71,3 +71,11 @@ model Prompt {
   @@index([userId, createdAt])
 }
 
+model Template {
+  id         String   @id @default(cuid())
+  industry   String
+  topic      String
+  prompt     String
+  createdAt  DateTime @default(now())
+}
+
