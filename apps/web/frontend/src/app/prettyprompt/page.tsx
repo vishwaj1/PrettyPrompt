@@ -128,7 +128,7 @@ export default function PrettyPromptPage() {
 
     } catch (err) {
       console.error(err);
-      alert('Backend error – please retry.');
+      alert(`Backend error – please retry. ${err}`);
     } finally {
       setBusy(false);
     }
