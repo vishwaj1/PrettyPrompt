@@ -82,7 +82,7 @@ def generate_final(metas: list[dict]) -> list[dict]:
 
 # ─── 5) Wire it all together ───
 if __name__ == "__main__":
-    industry = "Instagram Story Ideas"
+    industry = "Tourism"
     topics = gen_topics(industry)
     print("Topics →", topics)
 
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     print("Final Prompts →", json.dumps(finals, indent=2))
 
     # Save to database
-    API_URL = "http://localhost:3000/api/templates"
+    API_URL = "https://prettyprompt.vercel.app/api/templates"
 
     for entry in finals:
         payload = {
