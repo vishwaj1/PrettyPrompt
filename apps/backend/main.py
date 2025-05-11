@@ -10,7 +10,9 @@ from groq import Groq
 from dotenv import load_dotenv
 from fastapi.middleware.cors  import CORSMiddleware
 from typing import Optional, Literal, List
-from models import CompareRequest, CompareResponse, Criterion
+from models import CompareRequest, CompareResponse, Criterion, TemplateRequest, TemplateOut
+
+from data.run_pipeline import generate_templates_for_industry
 
 import re,json
 import groq
@@ -28,7 +30,8 @@ origins= os.getenv("ORIGINS")
 app = FastAPI(title="Promptly Analyzer", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=  origins,  # or ["*"] during dev
+    #allow_origins= origins,  # or ["*"] during dev
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],      # <-- include OPTIONS automatically
     allow_headers=["*"],      # allow Content-Type, Authorization, etc.
@@ -284,3 +287,16 @@ Answer B:
         total_original  = tx,
         total_rewrite   = ty
     )
+
+
+@app.post(
+  "/templates",
+  response_model=list[TemplateOut]
+)
+async def templates_endpoint(req: TemplateRequest):
+    try:
+        templates = generate_templates_for_industry(req.industry, req.count)
+        # ensure each dict has exactly the keys: "topic", "user_prompt"
+        return templates
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))

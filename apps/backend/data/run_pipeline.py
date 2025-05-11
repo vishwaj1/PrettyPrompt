@@ -80,6 +80,18 @@ def generate_final(metas: list[dict]) -> list[dict]:
     return finals
 
 
+def generate_templates_for_industry(industry: str, count: int = 5) -> list[dict]:
+    """
+    Single entrypoint: given an industry name, returns a list of
+    { topic:…, user_prompt:… } dicts.
+    """
+    topics = gen_topics(industry, count)
+    metas  = make_meta(industry, topics)
+    finals = generate_final(metas)
+    # Optionally attach timestamps or IDs here
+    return finals
+
+
 # ─── 5) Wire it all together ───
 if __name__ == "__main__":
     industry = "Tourism"

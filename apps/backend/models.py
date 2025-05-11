@@ -17,3 +17,12 @@ class CompareResponse(BaseModel):
     criteria: list[Criterion]
     total_original: int
     total_rewrite: int
+
+class TemplateRequest(BaseModel):
+    industry: str
+    count: int = 5
+
+class TemplateOut(BaseModel):
+    industry: str
+    topic:       str
+    user_prompt: str
