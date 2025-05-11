@@ -9,21 +9,22 @@ datasource db {
 
 // ---------- NextAuth default models ----------
 model User {
-  id            String   @id @default(cuid())
-  name          String?
-  email         String   @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String?        // for credentials flow
-  accounts      Account[]
-  sessions      Session[]
-  prompts     Prompt[] 
+  id               String                @id @default(cuid())
+  name             String?
+  email            String                @unique
+  emailVerified    DateTime?
+  image            String?
+  passwordHash     String? // for credentials flow
+  accounts         Account[]
+  sessions         Session[]
+  prompts          Prompt[]
+  createdTemplates UserCreatedTemplate[]
 }
 
 model Otp {
   id        String   @id @default(cuid())
   email     String
-  codeHash  String   // hashed OTP
+  codeHash  String // hashed OTP
   expiresAt DateTime
 }
 
@@ -33,13 +34,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  access_token      String?  @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
-  refresh_token     String?  @db.Text
-  id_token          String?  @db.Text
+  refresh_token     String? @db.Text
+  id_token          String? @db.Text
   scope             String?
   token_type        String?
-  user              User     @relation(fields: [userId], references: [id])
+  user              User    @relation(fields: [userId], references: [id])
+
   @@unique([provider, providerAccountId])
 }
 
@@ -55,27 +57,39 @@ model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
+
   @@unique([identifier, token])
 }
 
 model Prompt {
-  id               String   @id @default(cuid())
-  userId           String
-  user             User     @relation(fields: [userId], references: [id])
-  originalPrompt   String
-  rewrittenPrompt  String
-  mode             String
-  targetModel      String
-  createdAt        DateTime @default(now())
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  originalPrompt  String
+  rewrittenPrompt String
+  mode            String
+  targetModel     String
+  createdAt       DateTime @default(now())
 
   @@index([userId, createdAt])
 }
 
 model Template {
-  id         String   @id @default(cuid())
-  industry   String
-  topic      String
-  prompt     String
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  industry  String
+  topic     String
+  prompt    String
+  createdAt DateTime @default(now())
 }
 
+model UserCreatedTemplate {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  industry  String
+  topic     String
+  prompt    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
