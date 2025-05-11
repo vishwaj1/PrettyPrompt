@@ -30,8 +30,8 @@ origins= os.getenv("ORIGINS")
 app = FastAPI(title="Promptly Analyzer", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    #allow_origins= origins,  # or ["*"] during dev
-    allow_origins=["*"],
+    allow_origins= origins,  # or ["*"] during dev
+    # allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],      # <-- include OPTIONS automatically
     allow_headers=["*"],      # allow Content-Type, Authorization, etc.
@@ -299,4 +299,5 @@ async def templates_endpoint(req: TemplateRequest):
         # ensure each dict has exactly the keys: "topic", "user_prompt"
         return templates
     except Exception as e:
+        print(e)
         raise HTTPException(500, detail=str(e))

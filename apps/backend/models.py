@@ -23,6 +23,5 @@ class TemplateRequest(BaseModel):
     count: int = 5
 
 class TemplateOut(BaseModel):
-    industry: str
     topic:       str
     user_prompt: str

@@ -2,7 +2,7 @@ import json
 from agno.agent       import Agent, RunResponse
 from agno.models.groq import Groq
 from dotenv import load_dotenv
-import requests
+# import requests
 
 load_dotenv()
 
@@ -93,28 +93,28 @@ def generate_templates_for_industry(industry: str, count: int = 5) -> list[dict]
 
 
 # ─── 5) Wire it all together ───
-if __name__ == "__main__":
-    industry = "Tourism"
-    topics = gen_topics(industry)
-    print("Topics →", topics)
+# if __name__ == "__main__":
+#     industry = "Tourism"
+#     topics = gen_topics(industry)
+#     print("Topics →", topics)
 
-    metas = make_meta(industry, topics)
-    print("Metas →", json.dumps(metas, indent=2))
+#     metas = make_meta(industry, topics)
+#     print("Metas →", json.dumps(metas, indent=2))
 
-    finals = generate_final(metas)
-    print("Final Prompts →", json.dumps(finals, indent=2))
+#     finals = generate_final(metas)
+#     print("Final Prompts →", json.dumps(finals, indent=2))
 
-    # Save to database
-    API_URL = "https://prettyprompt.vercel.app/api/templates"
+#     # Save to database
+#     API_URL = "https://prettyprompt.vercel.app/api/templates"
 
-    for entry in finals:
-        payload = {
-            "industry": industry,
-            "topic":      entry["topic"],
-            "prompt":     entry["user_prompt"],
-        }
-        r = requests.post(API_URL, json=payload)
-        if not r.ok:
-            print("Failed to save:", payload, r.text)
-        else:
-            print("Saved template:", r.json()["id"])
+#     for entry in finals:
+#         payload = {
+#             "industry": industry,
+#             "topic":      entry["topic"],
+#             "prompt":     entry["user_prompt"],
+#         }
+#         r = requests.post(API_URL, json=payload)
+#         if not r.ok:
+#             print("Failed to save:", payload, r.text)
+#         else:
+#             print("Saved template:", r.json()["id"])
