@@ -1,6 +1,6 @@
 // app/api/usertemplates/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession }        from 'next-auth/next'
+import { getServerSession }        from 'next-auth'
 import { authOptions }             from '@/lib/auth'
 import { prisma }                  from '@/lib/prisma'
 
@@ -9,11 +9,14 @@ export async function GET() {
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const recs = await prisma.userCreatedTemplate.findMany({
+
+  // Always use findMany so you get [] even if there are no records
+  const templates = await prisma.userCreatedTemplate.findMany({
     where: { userId: session.user.id },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
   })
-  return NextResponse.json(recs)
+
+  return NextResponse.json(templates, { status: 200 })
 }
 
 export async function POST(req: NextRequest) {
@@ -21,22 +24,24 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const { industry, templates } = await req.json() as {
+
+  const { industry, templates } = (await req.json()) as {
     industry: string
     templates: { topic: string; user_prompt: string }[]
   }
 
-  const created = []
-  for (const { topic, user_prompt } of templates) {
-    const rec = await prisma.userCreatedTemplate.create({
-      data: {
-        userId:   session.user.id,
-        industry,
-        topic,
-        prompt:   user_prompt
-      }
-    })
-    created.push(rec)
-  }
+  const created = await Promise.all(
+    templates.map(({ topic, user_prompt }) =>
+      prisma.userCreatedTemplate.create({
+        data: {
+          userId:   session.user.id,
+          industry,
+          topic,
+          prompt:   user_prompt,
+        },
+      })
+    )
+  )
+
   return NextResponse.json(created, { status: 201 })
 }
