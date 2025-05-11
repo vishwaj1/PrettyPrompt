@@ -51,7 +51,7 @@ export default function TemplatesLayout({
     if (!query.trim()) return
     // 1) call FastAPI to generate templates
     const fast = await fetch(
-      `http://127.0.0.1:8000/templates`,{
+      `${process.env.NEXT_PUBLIC_API_URL}/templates`,{
         method: 'POST',
             headers:{ 'Content-Type':'application/json' },
             body: JSON.stringify({
@@ -61,7 +61,7 @@ export default function TemplatesLayout({
       });
     const templates = await fast.json()
     // 2) save them under the current user
-    await fetch('/api/usertemplates', {
+    await fetch('api/usertemplates', {
       method:  'POST',
       headers: { 'Content-Type':'application/json' },
       body:    JSON.stringify({ industry: query, templates })
