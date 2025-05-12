@@ -1,4 +1,5 @@
 // src/app/templates/page.tsx
+'use client'
 export default function TemplatesIndexPage() {
   return (
     <>
