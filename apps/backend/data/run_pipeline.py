@@ -25,7 +25,7 @@ final_agent = Agent(
 
 
 # ─── 2) Stage #1: Get topics ───
-def gen_topics(industry: str, count: int = 10) -> list[str]:
+def gen_topics(industry: str, count: int = 2) -> list[str]:
     prompt = (
         f"You are an expert in prompt engineering.  List {count} distinct topic areas "
         f"for creating prompt templates in the **{industry}** industry.  "
@@ -80,7 +80,7 @@ def generate_final(metas: list[dict]) -> list[dict]:
     return finals
 
 
-def generate_templates_for_industry(industry: str, count: int = 5) -> list[dict]:
+def generate_templates_for_industry(industry: str, count: int = 2) -> list[dict]:
     """
     Single entrypoint: given an industry name, returns a list of
     { topic:…, user_prompt:… } dicts.

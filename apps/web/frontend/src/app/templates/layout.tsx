@@ -51,7 +51,7 @@ function TemplatesLayoutContent({ children }: { children: ReactNode }) {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ industry: query, count: 5 }),
+        body: JSON.stringify({ industry: query, count: 2 }),
       }
     )
     const newTemplates = await fast.json()
