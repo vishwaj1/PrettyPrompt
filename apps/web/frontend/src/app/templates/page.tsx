@@ -1,6 +1,8 @@
 // src/app/templates/page.tsx
 'use client'
-export default function TemplatesIndexPage() {
+import { Suspense } from 'react'
+
+function TemplatesIndexPage() {
   return (
     <>
       <h2 className="text-2xl font-semibold mb-4">Select an industry →</h2>
@@ -9,4 +11,12 @@ export default function TemplatesIndexPage() {
       </p>
     </>
   );
+}
+
+export default function TemplatesPage() {
+  return (
+    <Suspense fallback={<div>Loading templates…</div>}>
+      <TemplatesIndexPage />
+    </Suspense>
+  )
 }
