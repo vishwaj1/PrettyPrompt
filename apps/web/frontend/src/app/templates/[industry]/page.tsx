@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useParams }        from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { ClipboardIcon }    from '@heroicons/react/24/outline'
 
 type Template = {
@@ -11,17 +11,12 @@ type Template = {
   prompt:   string
 }
 
-function IndustryTemplatesPage() {
+function IndustryTemplatesContent() {
   const { industry }    = useParams() || {}
-  const [source, setSource]         = useState<string | null>(null)
-  const [templates, setTemplates]   = useState<Template[]>([])
-  const [copiedId, setCopiedId]     = useState<string | null>(null)
-
-  // Read ?source= once, after hydration
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    setSource(params.get('source'))
-  }, [])
+  const searchParams    = useSearchParams()
+  const source          = searchParams.get('source')
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [copiedId, setCopiedId]   = useState<string | null>(null)
 
   // turn "e-commerce" → "E-commerce Templates"
   const title = industry
@@ -91,7 +86,7 @@ function IndustryTemplatesPage() {
                 {t.prompt}
               </pre>
 
-              {/* “Use this template” BUTTON */}
+              {/* "Use this template" BUTTON */}
               <button
                 className="text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                 onClick={() =>
@@ -110,10 +105,10 @@ function IndustryTemplatesPage() {
   )
 }
 
-export default function IndustryPage(){
+export default function IndustryPage() {
   return (
     <Suspense fallback={<div>Loading templates…</div>}>
-      <IndustryTemplatesPage />
+      <IndustryTemplatesContent />
     </Suspense>
   )
 }
