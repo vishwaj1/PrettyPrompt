@@ -4,6 +4,8 @@ import { getServerSession }        from 'next-auth'
 import { authOptions }             from '@/lib/auth'
 import { prisma }                  from '@/lib/prisma'
 
+
+
 export async function GET() {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
@@ -15,15 +17,19 @@ export async function GET() {
     orderBy: { createdAt: 'desc' },
   })
 
-  // Group by industry
   const grouped = allTemplates.reduce<Record<string, typeof allTemplates>>((acc, tmpl) => {
     if (!acc[tmpl.industry]) acc[tmpl.industry] = []
     acc[tmpl.industry].push(tmpl)
     return acc
   }, {})
 
+  if (Object.keys(grouped).length === 0) {
+    return NextResponse.json([], { status: 200 })
+  }
+
   return NextResponse.json(grouped, { status: 200 })
 }
+
 
 
 export async function POST(req: NextRequest) {
