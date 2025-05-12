@@ -17,11 +17,24 @@ export function TemplatesNav({ industries, yourSearches }: Props) {
   return (
     <aside className="w-64 bg-gray-50 dark:bg-gray-900 shadow-xl rounded-lg overflow-hidden">
       {/* Your Searches Section */}
-      <div className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
+      <div
+        className="
+          px-6 py-4
+          bg-gray-100 dark:bg-gray-800
+          border-b border-gray-300 dark:border-gray-700
+          rounded-md mb-4
+        "
+      >
+        <h3
+          className="
+            text-sm font-medium uppercase tracking-wide
+            text-gray-700 dark:text-gray-200
+          "
+        >
           Your Searches
         </h3>
       </div>
+
       <ul className="divide-y divide-gray-200 dark:divide-gray-700">
         {yourSearches.length > 0 ? (
           yourSearches.map(s => {
@@ -53,11 +66,27 @@ export function TemplatesNav({ industries, yourSearches }: Props) {
       </ul>
 
       {/* Industries Section */}
-      <div className="px-6 py-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
+      <div
+        className="
+          px-6 py-4
+          bg-gray-100 dark:bg-gray-800
+          border-b border-gray-300 dark:border-gray-700
+          rounded-md mb-4
+        "
+      >
+        <h3
+          className="
+            text-sm font-medium uppercase tracking-wide
+            text-gray-700 dark:text-gray-200
+          "
+        >
           Industries
         </h3>
       </div>
+
+
+
+
       <ul className="divide-y divide-gray-200 dark:divide-gray-700 mb-4">
         {industries.map(ind => {
           const slug = decodeURIComponent(ind)
