@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams }        from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { ClipboardIcon }    from '@heroicons/react/24/outline'
 
 type Template = {
@@ -12,7 +12,9 @@ type Template = {
 }
 
 export default function IndustryTemplatesPage() {
-  const { industry } = useParams() || {}
+  const { industry }    = useParams() || {}
+  const searchParams    = useSearchParams()
+  const source          = searchParams.get('source')
   const [templates, setTemplates] = useState<Template[]>([])
   const [copiedId, setCopiedId]   = useState<string | null>(null)
 
@@ -25,11 +27,21 @@ export default function IndustryTemplatesPage() {
 
   useEffect(() => {
     if (!industry) return
-    fetch(`/api/templates?industry=${encodeURIComponent(industry as string)}`)
-      .then(res => res.json())
+
+    // choose the correct endpoint
+    const url =
+      source === 'user'
+        ? `/api/usertemplates/${encodeURIComponent(industry as string)}`
+        : `/api/templates?industry=${encodeURIComponent(industry as string)}`
+
+    fetch(url)
+      .then(res => {
+        if (!res.ok) throw new Error(res.statusText)
+        return res.json()
+      })
       .then((data: Template[]) => setTemplates(data))
       .catch(console.error)
-  }, [industry])
+  }, [industry, source])
 
   return (
     <main className="flex-1 p-6 overflow-y-auto">
@@ -38,7 +50,9 @@ export default function IndustryTemplatesPage() {
       </h2>
 
       {templates.length === 0 ? (
-        <p className="text-sm text-gray-500">No templates found for {title}.</p>
+        <p className="text-sm text-gray-500">
+          No {source === 'user' ? 'your' : ''} templates found for {title}.
+        </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {templates.map(t => (
@@ -72,7 +86,7 @@ export default function IndustryTemplatesPage() {
                 {t.prompt}
               </pre>
 
-              {/* “Use this template” BUTTON (fires your existing CustomEvent) */}
+              {/* “Use this template” BUTTON */}
               <button
                 className="text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                 onClick={() =>

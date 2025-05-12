@@ -9,7 +9,7 @@ export async function GET(req: Request) {
     const industry = searchParams.get("industry") || undefined;
 
     const templates = await prisma.template.findMany({
-      where: industry ? { industry } : {},
+      where: industry ? { industry: decodeURIComponent(industry) } : {},
       orderBy: { industry: "asc" },
     });
 

@@ -1,8 +1,7 @@
 // components/TemplatesNav.tsx
 'use client'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { slugify,unslugify }     from '@/lib/slug'
+import { usePathname, useSearchParams } from 'next/navigation'
 
 interface Props {
   industries: string[]
@@ -10,8 +9,9 @@ interface Props {
 }
 
 export function TemplatesNav({ industries, yourSearches }: Props) {
-  const pathname = usePathname()
-  const active = pathname?.split('/').pop()
+  const pathname = usePathname()             // e.g. "/templates/Tourism"
+  const searchParams = useSearchParams()     // e.g. { source: "user" }
+  const activeSlug = pathname?.split('/').pop()
 
   return (
     <aside className="w-64 bg-gray-50 dark:bg-zinc-900 border-r overflow-auto">
@@ -22,13 +22,17 @@ export function TemplatesNav({ industries, yourSearches }: Props) {
         ) : (
           <ul className="space-y-1">
             {yourSearches.map(s => {
-              const slug = unslugify(s.industry)
+              const slug = decodeURIComponent(s.industry)
+              const href = `/templates/${encodeURIComponent(slug)}?source=user`
+              const isActive =
+                activeSlug === slug && searchParams.get('source') === 'user'
+
               return (
                 <li key={s.id}>
                   <Link
-                    href={`/templates/${slug}`}
+                    href={href}
                     className={`block px-3 py-1 rounded ${
-                      active === slug
+                      isActive
                         ? 'bg-blue-100 text-blue-700'
                         : 'hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-300'
                     }`}
@@ -48,13 +52,17 @@ export function TemplatesNav({ industries, yourSearches }: Props) {
         <h2 className="text-lg font-semibold mb-2">Industries</h2>
         <ul className="space-y-1">
           {industries.map(ind => {
-            const slug = slugify(ind)
+            const slug = decodeURIComponent(ind)
+            const href = `/templates/${encodeURIComponent(slug)}`
+            const isActive =
+              activeSlug === slug && !searchParams.get('source')
+
             return (
               <li key={ind}>
                 <Link
-                  href={`/templates/${slug}`}
+                  href={href}
                   className={`block px-3 py-1 rounded ${
-                    active === slug
+                    isActive
                       ? 'bg-blue-100 text-blue-700'
                       : 'hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-300'
                   }`}
