@@ -6,33 +6,49 @@ import { prisma }                  from '@/lib/prisma'
 
 
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // 1) Fetch all the user’s templates
+  // pull the `industry` query-param, if any
+  const industryParam = req.nextUrl.searchParams.get('industry')
+
+  if (industryParam) {
+    // --- Mode 1: flat list for a given industry ---
+    const recs = await prisma.userCreatedTemplate.findMany({
+      where: {
+        userId:   session.user.id,
+        industry: industryParam,
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+    return NextResponse.json(recs, { status: 200 })
+  }
+
+  // --- Mode 2: no param → group all templates by industry ---
   const allTemplates = await prisma.userCreatedTemplate.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: 'desc' },
   })
 
-  // 2) Group them into an object { [industry]: [templates] }
-  const groupedObj = allTemplates.reduce<Record<string, typeof allTemplates>>((acc, tmpl) => {
-    acc[tmpl.industry] = acc[tmpl.industry] || []
-    acc[tmpl.industry].push(tmpl)
-    return acc
-  }, {})
+  const groupedObj = allTemplates.reduce<Record<string, typeof allTemplates>>(
+    (acc, tmpl) => {
+      if (!acc[tmpl.industry]) acc[tmpl.industry] = []
+      acc[tmpl.industry].push(tmpl)
+      return acc
+    },
+    {}
+  )
 
-  // 3) Turn that object into an array of { industry, templates } entries
   const groupedArray = Object.entries(groupedObj).map(
     ([industry, templates]) => ({ industry, templates })
   )
 
-  // If there were no templates at all, groupedArray will simply be []
   return NextResponse.json(groupedArray, { status: 200 })
 }
+
 
 
 
