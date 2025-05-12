@@ -33,7 +33,7 @@ function IndustryTemplatesContent() {
 
     const url =
       source === 'user'
-        ? `/api/usertemplates/${encodeURIComponent(industry as string)}`
+        ? `/api/usertemplates?industry=${encodeURIComponent(industry as string)}`
         : `/api/templates?industry=${encodeURIComponent(industry as string)}`
 
     fetch(url)
