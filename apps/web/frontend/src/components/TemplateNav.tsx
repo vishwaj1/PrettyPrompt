@@ -12,6 +12,8 @@ interface Props {
 export function TemplatesNav({ industries, yourSearches }: Props) {
   const pathname = usePathname()
   const activeSlug = pathname?.split('/').pop()
+  const activeSlugDecoded = decodeURIComponent(activeSlug as string)
+  console.log(`activeSlug: ${activeSlug}`)
 
   return (
     <aside className="w-64 bg-gray-50 dark:bg-gray-900 shadow-xl rounded-lg overflow-hidden">
@@ -26,6 +28,7 @@ export function TemplatesNav({ industries, yourSearches }: Props) {
           yourSearches.map(s => {
             const slug = decodeURIComponent(s.industry)
             const href = `/templates/${encodeURIComponent(slug)}?source=user`
+            console.log(`slug: ${slug}`)
             const isActive = activeSlug === slug
             return (
               <li key={s.id}>
@@ -61,7 +64,7 @@ export function TemplatesNav({ industries, yourSearches }: Props) {
         {industries.map(ind => {
           const slug = decodeURIComponent(ind)
           const href = `/templates/${encodeURIComponent(slug)}`
-          const isActive = activeSlug === slug
+          const isActive = activeSlugDecoded === ind
           return (
             <li key={ind}>
               <Link
