@@ -12,23 +12,28 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // 1) Fetch all the user’s templates
   const allTemplates = await prisma.userCreatedTemplate.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: 'desc' },
   })
 
-  const grouped = allTemplates.reduce<Record<string, typeof allTemplates>>((acc, tmpl) => {
-    if (!acc[tmpl.industry]) acc[tmpl.industry] = []
+  // 2) Group them into an object { [industry]: [templates] }
+  const groupedObj = allTemplates.reduce<Record<string, typeof allTemplates>>((acc, tmpl) => {
+    acc[tmpl.industry] = acc[tmpl.industry] || []
     acc[tmpl.industry].push(tmpl)
     return acc
   }, {})
 
-  if (Object.keys(grouped).length === 0) {
-    return NextResponse.json([], { status: 200 })
-  }
+  // 3) Turn that object into an array of { industry, templates } entries
+  const groupedArray = Object.entries(groupedObj).map(
+    ([industry, templates]) => ({ industry, templates })
+  )
 
-  return NextResponse.json(grouped, { status: 200 })
+  // If there were no templates at all, groupedArray will simply be []
+  return NextResponse.json(groupedArray, { status: 200 })
 }
+
 
 
 
