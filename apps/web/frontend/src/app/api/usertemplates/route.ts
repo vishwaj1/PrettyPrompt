@@ -10,14 +10,21 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Always use findMany so you get [] even if there are no records
-  const templates = await prisma.userCreatedTemplate.findMany({
+  const allTemplates = await prisma.userCreatedTemplate.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: 'desc' },
   })
 
-  return NextResponse.json(templates, { status: 200 })
+  // Group by industry
+  const grouped = allTemplates.reduce<Record<string, typeof allTemplates>>((acc, tmpl) => {
+    if (!acc[tmpl.industry]) acc[tmpl.industry] = []
+    acc[tmpl.industry].push(tmpl)
+    return acc
+  }, {})
+
+  return NextResponse.json(grouped, { status: 200 })
 }
+
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
