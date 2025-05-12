@@ -1,7 +1,8 @@
 // components/TemplatesNav.tsx
 'use client'
+
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname} from 'next/navigation'
 
 interface Props {
   industries: string[]
@@ -9,72 +10,75 @@ interface Props {
 }
 
 export function TemplatesNav({ industries, yourSearches }: Props) {
-  const pathname = usePathname()             // e.g. "/templates/Tourism"
-  const searchParams = useSearchParams()     // e.g. { source: "user" }
+  const pathname = usePathname()
   const activeSlug = pathname?.split('/').pop()
 
   return (
-    <aside className="w-64 bg-gray-50 dark:bg-zinc-900 border-r overflow-auto">
-      <section className="p-4">
-        <h2 className="text-lg font-semibold mb-2">Your Searches</h2>
-        {yourSearches.length === 0 ? (
-          <p className="text-sm text-gray-500">None yet</p>
-        ) : (
-          <ul className="space-y-1">
-            {yourSearches.map(s => {
-              const slug = decodeURIComponent(s.industry)
-              console.log(`slug: ${slug}`)
-              const href = `/templates/${slug}?source=user`
-              const isActive =
-                activeSlug === slug && searchParams.get('source') === 'user'
-
-              return (
-                <li key={s.id}>
-                  <Link
-                    href={href}
-                    className={`block px-3 py-1 rounded ${
-                      isActive
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-300'
-                    }`}
-                  >
-                    {s.industry} → {s.topic}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
-
-      <hr />
-
-      <section className="p-4">
-        <h2 className="text-lg font-semibold mb-2">Industries</h2>
-        <ul className="space-y-1">
-          {industries.map(ind => {
-            const slug = decodeURIComponent(ind)
-            const href = `/templates/${encodeURIComponent(slug)}`
-            const isActive =
-              activeSlug === slug && !searchParams.get('source')
-
+    <aside className="w-64 bg-gray-50 dark:bg-gray-900 shadow-xl rounded-lg overflow-hidden">
+      {/* Your Searches Section */}
+      <div className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
+          Your Searches
+        </h3>
+      </div>
+      <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+        {yourSearches.length > 0 ? (
+          yourSearches.map(s => {
+            const slug = decodeURIComponent(s.industry)
+            const href = `/templates/${encodeURIComponent(slug)}?source=user`
+            const isActive = activeSlug === slug
             return (
-              <li key={ind}>
+              <li key={s.id}>
                 <Link
                   href={href}
-                  className={`block px-3 py-1 rounded ${
+                  className={`flex items-center justify-between px-6 py-3 text-sm transition-colors duration-200 rounded-none ${
                     isActive
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-300'
+                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300 border-l-4 border-blue-500'
+                      : 'hover:bg-white hover:dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                   }`}
                 >
-                  {ind}
+                  <div className="flex items-center">
+                    {isActive && <span className="w-2 h-2 bg-blue-500 rounded-full mr-3" />}
+                    <span className="truncate font-medium">{s.industry}</span>
+                  </div>
+                  <span className="ml-2 text-xs text-gray-500 dark:text-gray-500">{s.topic}</span>
                 </Link>
               </li>
             )
-          })}
-        </ul>
-      </section>
+          })
+        ) : (
+          <li className="px-6 py-3 text-sm text-gray-500 dark:text-gray-500">No recent searches</li>
+        )}
+      </ul>
+
+      {/* Industries Section */}
+      <div className="px-6 py-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
+          Industries
+        </h3>
+      </div>
+      <ul className="divide-y divide-gray-200 dark:divide-gray-700 mb-4">
+        {industries.map(ind => {
+          const slug = decodeURIComponent(ind)
+          const href = `/templates/${encodeURIComponent(slug)}`
+          const isActive = activeSlug === slug
+          return (
+            <li key={ind}>
+              <Link
+                href={href}
+                className={`flex items-center px-6 py-3 text-sm transition-colors duration-200 rounded-none ${
+                  isActive
+                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300 border-l-4 border-blue-500'
+                    : 'hover:bg-white hover:dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                {isActive && <span className="w-2 h-2 bg-blue-500 rounded-full mr-3" />}
+                <span className="truncate font-medium">{ind}</span>
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
     </aside>
   )
 }
