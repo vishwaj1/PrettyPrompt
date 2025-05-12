@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     const recs = await prisma.userCreatedTemplate.findMany({
       where: {
         userId:   session.user.id,
-        industry: industryParam,
+        industry: encodeURIComponent(industryParam),
       },
       orderBy: { createdAt: 'desc' },
     })
