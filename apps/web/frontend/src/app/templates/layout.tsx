@@ -1,5 +1,5 @@
 'use client'
-import { ReactNode, useState, useEffect, useCallback } from 'react'
+import { ReactNode, useState, useEffect, useCallback, Suspense } from 'react'
 import { TemplatesNav } from '@/components/TemplateNav'
 import { useSession }   from 'next-auth/react'
 
@@ -17,11 +17,7 @@ type Template = {
   createdAt:   string;
 };
 
-export default function TemplatesLayout({
-  children,
-}: {
-  children: ReactNode
-}) {
+function TemplatesLayoutContent({ children }: { children: ReactNode }) {
   const { data: session } = useSession()
   const [query, setQuery] = useState('')
   const [yourSearches, setYourSearches] = useState<UserSearch[]>([])
@@ -101,5 +97,13 @@ export default function TemplatesLayout({
         </div>
       </div>
     </div>
+  )
+}
+
+export default function TemplatesLayout({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TemplatesLayoutContent>{children}</TemplatesLayoutContent>
+    </Suspense>
   )
 }
