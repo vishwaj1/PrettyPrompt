@@ -102,11 +102,11 @@ function IndustryTemplatesContent() {
               {/* "Use this template" BUTTON */}
               <button
                 className="mt-auto w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200"
-                onClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent('load-template', { detail: t.prompt })
-                  )
-                }
+                onClick={() => {
+                  const base = 'https://chat.openai.com/?model=gpt-4'
+                  const payload = encodeURIComponent(t.prompt)
+                  window.open(`${base}&prompt=${payload}`, '_blank')
+                }}
               >
                 Use this template
               </button>
