@@ -54,7 +54,7 @@ function IndustryTemplatesContent() {
   return (
     <main className="flex-1 p-8 overflow-y-auto bg-gradient-to-br from-white to-blue-50 dark:from-zinc-900 dark:to-zinc-800">
       <h2 className="text-3xl font-extrabold mb-8 text-gray-900 dark:text-zinc-100 border-b-4 border-blue-500 inline-block pb-2">
-        {title} Templates
+        {title} 
       </h2>
 
       {templates.length === 0 ? (
