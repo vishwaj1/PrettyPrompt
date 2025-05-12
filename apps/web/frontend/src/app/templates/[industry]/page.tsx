@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useParams }        from 'next/navigation'
 import { ClipboardIcon }    from '@heroicons/react/24/outline'
 
 type Template = {
@@ -11,12 +11,17 @@ type Template = {
   prompt:   string
 }
 
-function IndustryTemplatesPage() {
+export default function IndustryTemplatesPage() {
   const { industry }    = useParams() || {}
-  const searchParams    = useSearchParams()
-  const source          = searchParams.get('source')
-  const [templates, setTemplates] = useState<Template[]>([])
-  const [copiedId, setCopiedId]   = useState<string | null>(null)
+  const [source, setSource]         = useState<string | null>(null)
+  const [templates, setTemplates]   = useState<Template[]>([])
+  const [copiedId, setCopiedId]     = useState<string | null>(null)
+
+  // Read ?source= once, after hydration
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    setSource(params.get('source'))
+  }, [])
 
   // turn "e-commerce" → "E-commerce Templates"
   const title = industry
@@ -25,10 +30,10 @@ function IndustryTemplatesPage() {
         .replace(/\b\w/g, c => c.toUpperCase())
     : ''
 
+  // Fetch whenever industry or source changes
   useEffect(() => {
     if (!industry) return
 
-    // choose the correct endpoint
     const url =
       source === 'user'
         ? `/api/usertemplates/${encodeURIComponent(industry as string)}`
@@ -51,7 +56,7 @@ function IndustryTemplatesPage() {
 
       {templates.length === 0 ? (
         <p className="text-sm text-gray-500">
-          No {source === 'user' ? 'your' : ''} templates found for {title}.
+          No {source === 'user' ? 'your ' : ''}templates found for {title}.
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -102,13 +107,5 @@ function IndustryTemplatesPage() {
         </div>
       )}
     </main>
-  )
-}
-
-export default function IndustryPage() {
-  return (
-    <Suspense fallback={<div>Loading templates…</div>}>
-      <IndustryTemplatesPage />
-    </Suspense>
   )
 }
