@@ -13,7 +13,8 @@ export async function GET(req: NextRequest) {
   }
 
   // pull the `industry` query-param, if any
-  const industryParam = req.nextUrl.searchParams.get('industry')
+  const { searchParams } = new URL(req.url);
+  const industryParam = searchParams.get("industry") || undefined;
   console.log(`industryParam: ${industryParam}`)
   if (industryParam) {
     // --- Mode 1: flat list for a given industry ---
