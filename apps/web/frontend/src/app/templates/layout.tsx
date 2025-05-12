@@ -57,7 +57,7 @@ function TemplatesLayoutContent({ children }: { children: ReactNode }) {
       });
     const templates = await fast.json()
     // 2) save them under the current user
-    await fetch('api/usertemplates', {
+    await fetch('/api/usertemplates', {
       method:  'POST',
       headers: { 'Content-Type':'application/json' },
       body:    JSON.stringify({ industry: query, templates })
