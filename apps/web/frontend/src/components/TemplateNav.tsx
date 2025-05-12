@@ -23,6 +23,7 @@ export function TemplatesNav({ industries, yourSearches }: Props) {
           <ul className="space-y-1">
             {yourSearches.map(s => {
               const slug = decodeURIComponent(s.industry)
+              console.log(`slug: ${slug}`)
               const href = `/templates/${slug}?source=user`
               const isActive =
                 activeSlug === slug && searchParams.get('source') === 'user'

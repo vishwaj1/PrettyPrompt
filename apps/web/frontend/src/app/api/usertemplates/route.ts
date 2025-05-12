@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   // pull the `industry` query-param, if any
   const industryParam = req.nextUrl.searchParams.get('industry')
-
+  console.log(`industryParam: ${industryParam}`)
   if (industryParam) {
     // --- Mode 1: flat list for a given industry ---
     const recs = await prisma.userCreatedTemplate.findMany({

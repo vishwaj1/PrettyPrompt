@@ -25,6 +25,8 @@ function IndustryTemplatesContent() {
         .replace(/\b\w/g, c => c.toUpperCase())
     : ''
 
+  console.log(`industry: ${industry}`)
+
   // Fetch whenever industry or source changes
   useEffect(() => {
     if (!industry) return
