@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { ClipboardIcon }    from '@heroicons/react/24/outline'
 
@@ -11,7 +11,7 @@ type Template = {
   prompt:   string
 }
 
-export default function IndustryTemplatesPage() {
+function IndustryTemplatesPage() {
   const { industry }    = useParams() || {}
   const searchParams    = useSearchParams()
   const source          = searchParams.get('source')
@@ -102,5 +102,13 @@ export default function IndustryTemplatesPage() {
         </div>
       )}
     </main>
+  )
+}
+
+export default function IndustryPage() {
+  return (
+    <Suspense fallback={<div>Loading templates…</div>}>
+      <IndustryTemplatesPage />
+    </Suspense>
   )
 }
