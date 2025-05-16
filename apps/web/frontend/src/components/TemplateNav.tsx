@@ -2,7 +2,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname} from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 interface Props {
   industries: string[]
@@ -22,7 +22,7 @@ export function TemplatesNav({ industries, yourSearches }: Props) {
           px-6 py-4
           bg-gray-100 dark:bg-gray-800
           border-b border-gray-300 dark:border-gray-700
-          rounded-md mb-4
+          rounded-md mb-2
         "
       >
         <h3
@@ -35,7 +35,8 @@ export function TemplatesNav({ industries, yourSearches }: Props) {
         </h3>
       </div>
 
-      <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+      {/* → scrollable */}
+      <ul className="overflow-y-auto max-h-32 divide-y divide-gray-200 dark:divide-gray-700 mb-4">
         {yourSearches.length > 0 ? (
           yourSearches.map(s => {
             const slug = decodeURIComponent(s.industry)
@@ -71,7 +72,7 @@ export function TemplatesNav({ industries, yourSearches }: Props) {
           px-6 py-4
           bg-gray-100 dark:bg-gray-800
           border-b border-gray-300 dark:border-gray-700
-          rounded-md mb-4
+          rounded-md mb-2
         "
       >
         <h3
@@ -84,10 +85,8 @@ export function TemplatesNav({ industries, yourSearches }: Props) {
         </h3>
       </div>
 
-
-
-
-      <ul className="divide-y divide-gray-200 dark:divide-gray-700 mb-4">
+      {/* → scrollable */}
+      <ul className="overflow-y-auto max-h-auto divide-y divide-gray-200 dark:divide-gray-700">
         {industries.map(ind => {
           const slug = decodeURIComponent(ind)
           const href = `/templates/${encodeURIComponent(slug)}`
